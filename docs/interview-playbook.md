@@ -35,7 +35,7 @@ TraceForge 的主线是：**把一次修复变成有来源、需审批、可验�
 | 测试全绿是否足够？ | 还要确认基线实际失败、原测试身份保留、测试数未减少、跳过未增加，并取得完整观察报告。普通仓库执行注册的测试命令，内置 benchmark 额外运行预设隐藏测试检查过拟合。即使这些成立，结论仍只覆盖已执行的测试。 | `assess_regression`、[test_runner.py](../tests/test_runner.py)、[benchmark.md](benchmark.md) |
 | 模型接口接通了吗？ | 已使用用户指定网关的 deepseek-v4.1-flash 完成真实工具调用、浏览器审批与 Docker 回归。十案例为每题一次；旧网关 403 等失败仍保留。请求模型名称可以审计，但网关返回不构成底层模型身份认证。 | [真实模型验收](live-validation.md)、[live 报告](evidence/live-run-report.md) |
 | 记忆是不是自动学习？ | 只把通过回归验证的结果保存成可审阅的项目经验。目前不自动注入旧记忆进行推理，也没有训练模型。这样避免把过期引用当作新任务证据。 | `save_memory`、控制台“知识记忆” |
-| 上线和 CI 到什么程度？ | 已有 Windows 本机、真实 Docker 和浏览器交互验证。仓库有 CI 配置，但尚未推送并取得 CI 运行结果，不能说已经跨平台 CI 全绿。 | [验收记录](acceptance.md)、本机测试与构建记录 |
+| 上线和 CI 到什么程度？ | 已有 Windows 本机、真实 Docker 和浏览器交互验证。GitHub 工作流覆盖 Linux / Windows、两种 Python 版本、前端与独立安装；讲述时打开对应提交的 Actions 结果。仓库托管与 CI 不等于服务已部署或有生产用户。 | [验收记录](acceptance.md)、[GitHub Actions](https://github.com/zhyzx35607/TraceForge/actions) |
 
 ## 可以深入讲的真实故障
 

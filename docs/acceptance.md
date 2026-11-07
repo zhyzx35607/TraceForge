@@ -25,7 +25,7 @@
 | 调查报告导出 | 浏览器实际下载 Markdown 与 JSON；摘要独立复算一致；明确 replay、0 模型请求与 4 失败 → 8 通过；390px 无溢出 | [下载验收](evidence/report-download.json)、[报告样例](evidence/sample-run-report.md)、[JSON 样例](evidence/sample-run-report.json) |
 | 检索消融与界面 | 10 个问题、33 个公开文件；RRF Recall@8=1.00、BM25=0.95，MRR 则 BM25 更高；实际展开逐题排名，390px 无页面横溢，浏览器 warn/error 为空 | [原始评测](evidence/retrieval-ablation.json)、[浏览器验收](evidence/retrieval-browser.json)、[口径与限制](retrieval-evaluation.md) |
 | 本机并发一致性 | 12 条合成任务：6 批准、3 拒绝、3 取消；重复审批恰好一次生效；18 作业全部完成、最多尝试 1 次、两个 worker 的验证区间实际重叠；6 条记忆无重复，0 模型请求，18.047s | [完整报告](evidence/local-concurrency.json)、[复现与限制](local-concurrency.md)；239 个 HTTP 响应的 p95 为 375ms，仅这一轮本机小样本 |
-| GitHub CI | 已写工作流，**未推送，未运行云端 CI** | `.github/workflows/ci.yml` |
+| GitHub CI | 已创建 `zhyzx35607/TraceForge` 私有仓库；推送会触发 Linux / Windows、Python 3.11 / 3.12、前端构建与 Linux 独立安装验收；各提交的实际结果保存在 Actions | [GitHub Actions](https://github.com/zhyzx35607/TraceForge/actions)、`.github/workflows/ci.yml`；不以本地成绩代替云端运行结果 |
 | 模型启动脚本 | Windows PowerShell 5.1 下使用非敏感占位凭据继承进程环境，启动独立目录、读取网页与模型配置成功；0 调查、0 模型请求；交互式隐藏输入分支未人工验收 | [启动验收](evidence/live-launcher.json)、`scripts/start-live.ps1` |
 
 TestClient 的完整测试输出有一条 Starlette/httpx 弃用提示，不影响当前通过结果；后续升级依赖时应处理，不能将它隐藏为零 warning。
