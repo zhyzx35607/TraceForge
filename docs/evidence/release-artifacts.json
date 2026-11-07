@@ -1,0 +1,24 @@
+{
+  "kind": "local-release-artifacts",
+  "version": "0.1.0",
+  "tested_payload_matches_final_wheel": true,
+  "matched_package_files": 97,
+  "published": false,
+  "artifacts": [
+    {
+      "name": ".gitignore",
+      "bytes": 1,
+      "sha256": "684888c0ebb17f374298b65ee2807526c066094c701bcc7ebbe1c1095f494fc1"
+    },
+    {
+      "name": "traceforge_agent-0.1.0-py3-none-any.whl",
+      "bytes": 218003,
+      "sha256": "824f5b16cb1ba086d52627f856a917923390185f759f34f9fb9223f168f9d37e"
+    },
+    {
+      "name": "traceforge_agent-0.1.0.tar.gz",
+      "bytes": 219192,
+      "sha256": "3759464109a9009c473891cbeeee9bd3bd88ad7a9296e5f93d98d53fcb4f5b13"
+    }
+  ]
+}

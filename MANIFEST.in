@@ -1,0 +1,8 @@
+include README.md setup.py
+recursive-include examples *.py *.md
+recursive-include benchmarks/cases *.py *.md *.json *.log *.lock
+include benchmarks/cases/injection_discount/workspace/.env
+include benchmarks/cases/permission_injection/workspace/.env
+recursive-include web/dist *.html *.js *.css *.svg *.woff2 *.png *.jpg
+global-exclude *.py[cod]
+global-exclude __pycache__

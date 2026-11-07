@@ -8,6 +8,6 @@ if ($ProjectRoot) {
 }
 $runtime = Join-Path $taskRoot '.venv\Scripts\python.exe'
 if (-not (Test-Path -LiteralPath $runtime)) {
-    throw '请先运行 uv venv，再运行 uv pip install --python .venv/Scripts/python.exe -e ".[dev]"'
+    throw '请先运行 uv sync --extra dev --locked'
 }
 & $runtime -m traceforge serve --port $Port

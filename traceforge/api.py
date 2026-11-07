@@ -17,8 +17,9 @@ from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from . import __version__
-from .config import DEMO_ROOT, PACKAGE_ROOT, Settings
+from .config import DEMO_ROOT, Settings
 from .models import Approval, ProjectCreate, RunCreate
+from .paths import WEB_ROOT
 from .store import TERMINAL, ConflictError, LeaseLostError, Store, encode
 
 log = logging.getLogger("traceforge")
@@ -274,8 +275,6 @@ def create_app(settings: Settings | None = None, *, start_workers: bool = True) 
     @app.get("/api/evaluation")
     def evaluation():
         path = settings.data_dir / "evaluation.json"
-        if not path.is_file():
-            path = PACKAGE_ROOT / "evals" / "results" / "offline.json"
         if path.is_file():
             return {"available": True, **json.loads(path.read_text(encoding="utf-8"))}
         return {"available": False}
@@ -290,7 +289,7 @@ def create_app(settings: Settings | None = None, *, start_workers: bool = True) 
         except (OSError, ValueError) as exc:
             raise HTTPException(500, f"基准报告不可读：{type(exc).__name__}") from exc
 
-    dist = PACKAGE_ROOT / "web" / "dist"
+    dist = WEB_ROOT
     if dist.is_dir():
         app.mount("/", StaticFiles(directory=dist, html=True), name="web")
     else:

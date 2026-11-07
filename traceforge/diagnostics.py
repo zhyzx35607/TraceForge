@@ -11,7 +11,7 @@ from urllib.parse import urlsplit
 import httpx
 
 from .config import Settings
-from .provider import ProviderError, bounded_json_request, usage_counts
+from .provider import ProviderError, bounded_json_request, error_metadata, usage_counts
 from .retrieval import redact
 
 DIAGNOSTIC_RESPONSE_BYTES = 256_000
@@ -28,14 +28,13 @@ def _safe_report(value, api_key: str):
 
 
 def classify_response(status: int, data: object) -> dict:
-    error = data.get("error", {}) if isinstance(data, dict) else {}
-    if not isinstance(error, dict):
-        error = {"message": str(error)}
-    root = data if isinstance(data, dict) else {}
-    code = str(error.get("code") or root.get("error_code") or root.get("code") or "")[:120]
-    message = redact(str(error.get("message") or root.get("message") or root.get("detail") or ""))[:600]
+    metadata = error_metadata(data)
+    code = redact(metadata.get("code", ""))[:120]
+    upstream_type = redact(metadata.get("type", ""))[:120]
+    message = redact(metadata.get("message", ""))[:600]
     if status == 429:
-        category = "concurrency_limit" if "concurrency" in code.lower() or "concurrency" in message.lower() else "rate_limit"
+        hints = f'{code} {upstream_type} {message}'.lower()
+        category = "concurrency_limit" if "concurrency" in hints else "rate_limit"
         action = "服务端并发或速率已达上限。减少同账号并发，稍后重试；不要把它计为模型推理失败。"
     elif status == 401:
         category, action = "authentication", "服务端拒绝凭据，请检查当前环境中的 Key 和接口地址。"
@@ -49,7 +48,8 @@ def classify_response(status: int, data: object) -> dict:
         category, action = "request_rejected", "检查 API_STYLE、模型能力和请求格式；不会静默替换模型。"
     else:
         category, action = "ok", "接口已响应；模型列表存在不代表工具调用一定可用。"
-    return {"category": category, "code": code or None, "message": message or None, "action": action}
+    return {"category": category, "code": code or None, "upstream_type": upstream_type or None,
+            "message": message or None, "action": action}
 
 
 async def diagnose_provider(settings: Settings, *, smoke: bool = False,
@@ -80,16 +80,22 @@ async def diagnose_provider(settings: Settings, *, smoke: bool = False,
             try:
                 status, _response_headers, data = await bounded_json_request(
                     client, method, settings.base_url.rstrip("/") + path, headers=headers, payload=body,
-                    timeout=min(settings.request_timeout, 45), deadline=deadline, max_bytes=DIAGNOSTIC_RESPONSE_BYTES)
+                    timeout=min(settings.request_timeout, 45), deadline=deadline, max_bytes=DIAGNOSTIC_RESPONSE_BYTES,
+                    read_error_metadata=True)
+                # Remove the actual credential before truncating any upstream field.
+                # The request helper returns only allowlisted error metadata on non-2xx.
+                if not 200 <= status < 300:
+                    data = _safe_report(data, settings.api_key)
                 check = {"name": name, "ok": status == 200, "http_status": status,
-                         **classify_response(status, {})}
+                         **classify_response(status, data if not 200 <= status < 300 else {})}
                 if name == "models" and status == 200:
                     listed = data.get("data")
                     if not isinstance(listed, list) or any(not isinstance(item, dict)
                                                          or not isinstance(item.get('id'), str) for item in listed):
                         raise ProviderError('模型列表响应结构无效', fault_type='format')
-                    ids = [item['id'][:200] for item in listed]
-                    check.update(listed_models=ids[:100], selected_model_listed=settings.model in ids)
+                    ids = [_safe_report(item['id'], settings.api_key)[:200] for item in listed]
+                    check.update(listed_models=ids[:100],
+                                 selected_model_listed=any(settings.model == item['id'] for item in listed))
                 if smoke and name == "minimal_generation" and status == 200:
                     check["usage"] = usage_counts(data)
                     check["action"] = "最小生成请求成功；此检查没有验证 Function Calling 或修复效果。"

@@ -6,10 +6,13 @@
 
 | 检查 | 实际结果 | 原始记录或复现入口 |
 | --- | --- | --- |
-| 完整后端测试 | **205 passed, 3 skipped**，48.84s；3 项因本机 symlink 创建权限跳过；实际 Windows junction 测试通过 | 本机 `.traceforge/acceptance/pytest.txt`；`python -m pytest -q` |
+| 完整后端测试 | **235 passed, 3 skipped**，63.89s；3 项因本机 symlink 创建权限跳过；实际 Windows junction 测试通过 | 本机 `.traceforge/acceptance/pytest-release.txt`；`python -m pytest -q` |
 | Ruff | `All checks passed!` | `python -m ruff check traceforge tests` |
 | 锁定安装 | `uv sync --extra dev --locked` 成功 | `uv.lock`；跨磁盘安装使用 copy 回退，仅性能提示 |
 | 前端类型检查与构建 | 成功，1585 modules；JS gzip 94.56KB | `npm run build`；不等同于浏览器性能评分 |
+| wheel / sdist 内容 | 前端、结算样例、十个基准共 81 个资源；与源码逐文件 SHA256 一致 | `uv build`；已独立只读核查产物 |
+| wheel 独立安装 | 空工作目录、独立 venv、Python `-I`；实际 HTML/JS/CSS 可用；摘要审批后 8 项中 4 失败 → 8 项全通过；安装资源不变；evaluate 10/10，unit_conversion oracle 1/1 | [可携带报告](evidence/installed-release.json)；本机 `.traceforge/release-acceptance/report.json`；17.469s，0 模型调用 |
+| 一键发布脚本 | `scripts/release.ps1 -SkipInstall` 实跑成功；重新构建前端/sdist/wheel、新建 venv、安装与完整 smoke，后者 12.516s | 本机 `.traceforge/releases/40a8c701d8c34116a7eaa795015a41df/report.json` |
 | 离线机制评测 | **10/10** | [可携带报告](evidence/offline-evaluation.json)，`traceforge evaluate` |
 | 多故障 Oracle | 修复 **7/7**，拒答 **3/3**，安全 **2/2**，初始检索路径覆盖 **10/10** | [可携带报告](evidence/oracle-benchmark.json)，session `20261107T024936Z-b0e64e03` |
 | 模型功能正确率 | **未测，0/0**；Oracle provider calls=0、tokens=0 | 与上一行完全不同的分母 |
@@ -33,6 +36,8 @@ TestClient 的完整测试输出有一条 Starlette/httpx 弃用提示，不影�
 | `AWS_SECRET_ACCESS_KEY` / `CUSTOM_API_KEY` 普通值漏脱敏 | 检索与读取共用完整字段名规则，保留 JSON 结构、行号和原文件 |
 | `.git` 文本、`commondir`、`alternates` 指向外部历史 | 三种均真实复现；调用 Git 前检查独立元数据布局，默认跳过共享或外指结构 |
 | 慢速分块响应突破单次读超时，完整读入后才判大小 | 整体 deadline + 分块上限 + 流关闭；超长和 slow-drip MockTransport 回归通过 |
+| doctor 不读取错误正文导致并发限制只能显示普通 429 | 诊断显式读取最多 4KiB，仅保留标量 code/type/message，实际 Key 先脱敏再截断；HTML、超长、压缩和慢流仍保留 HTTP 状态；生产推理默认不读取错误正文 |
+| 单独安装 wheel 缺少网页/样例/基准，并把状态放到安装目录 | 发行构建包含固定资源，运行状态使用用户数据目录；缺失前端构建时发行失败；独立安装完整演示实测通过 |
 | IPv6 Host 与非 ASCII Authorization | 合法 `[::1]` 接受；非法 Origin 与 Token 返回受控错误，不能触发 500 |
 
 ## 真实模型路径的准确状态
@@ -43,11 +48,13 @@ TestClient 的完整测试输出有一条 Starlette/httpx 弃用提示，不影�
 
 因此本版不宣称已有成功的 live 修复，不给模型准确率。下一项验收是：使用当前账号下可成功生成且支持 Function Calling 的服务，先完成一个合成样例的 **live 调查 → 人工审批 → Docker 回归**，再运行固定 live 基准。保持相同案例与分母，记录失败、Token 和时间；不要换成 Oracle 填补。
 
-最终又在其余代理全部停止后，运行了 `gpt-6.1-sol` Responses 的完整 Engine 调查（180 秒总预算、140 秒单次请求上限）。run `cf51fc1170354f1b9a05d033ef2bd2a5` 在首次调用返回 HTTP 403，未进入审批或执行；记录 1 次真实请求，提供方未返回 token usage。原始报告位于本机 `.traceforge/live-validation-final/report.json`。这是服务访问失败，不能归因为模型修复推理失败，也不能算通过。
+完整 Engine 调查也在其余代理停止后执行过（`gpt-6.1-sol` Responses，180 秒总预算、140 秒单次请求上限）。run `cf51fc1170354f1b9a05d033ef2bd2a5` 在首次调用返回 HTTP 403，未进入审批或执行；记录 1 次真实请求，提供方未返回 token usage。原始报告位于本机 `.traceforge/live-validation-final/report.json`。这是服务访问失败，不能归因为模型修复推理失败，也不能算通过。
+
+在修复诊断工具后，**2026-11-07 11:22（上海）**再次执行一次有界最小生成：模型列表 HTTP 200，生成 HTTP 403，类别 `access_denied`。此次没有得到符合大小、编码和 JSON 约束的可展示错误字段，不能进一步断言是服务端哪个访问规则导致。见 [诊断记录](evidence/provider-diagnosis.json)。
 
 ## 可复现范围与限制
 
-- 当前按源码仓库安装，未提供包含所有资源的自包含 wheel；运行数据、私有仓库证据、原始本机路径和日志留在被忽略的 `.traceforge/`。
+- 已提供包含前端/样例/基准的 wheel 和 sdist，并实测 Windows 独立安装；它们不包含 Python 解释器、Docker 或第三方 Python 依赖，不声称离线免安装。源码运行数据、私有仓库证据、原始本机路径和日志留在被忽略的 `.traceforge/`；wheel 默认使用用户数据目录。
 - 单机 SQLite + 两 worker，至少一次处理；尚未实现多机调度、多租户权限或大规模生产压测。
 - 检索是 BM25 + 字符 n-gram TF-IDF cosine + RRF，不是神经 embedding。核心推理为单 Agent，并行部分是独立取证任务。
 - Docker 与本机 runner 明确区分；local 只用于显式可信代码，不是安全沙箱。Docker 验证镜像需事先包含测试依赖。

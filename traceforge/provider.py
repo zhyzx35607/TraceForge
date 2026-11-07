@@ -12,6 +12,7 @@ from .models import Diagnosis
 
 MAX_RESPONSE_BYTES = 1_000_000
 RESPONSE_CHUNK_BYTES = 16_384
+ERROR_METADATA_BYTES = 4_096
 
 
 class ProviderError(RuntimeError):
@@ -20,54 +21,84 @@ class ProviderError(RuntimeError):
         self.fault_type = fault_type
 
 
+def error_metadata(data: object) -> dict:
+    """Select scalar diagnostic fields, never stringify arbitrary upstream data."""
+    if not isinstance(data, dict):
+        return {}
+    error = data.get('error')
+    nested = error if isinstance(error, dict) else {}
+    candidates = {
+        'code': (nested.get('code'), data.get('error_code'), data.get('code')),
+        'type': (nested.get('type'), data.get('type')),
+        'message': (nested.get('message'), error, data.get('message'), data.get('detail')),
+    }
+    selected = {}
+    for field, values in candidates.items():
+        for value in values:
+            if (isinstance(value, str) and value) or (field != 'message' and type(value) is int):
+                selected[field] = str(value)
+                break
+    return selected
+
+
 async def bounded_json_request(client: httpx.AsyncClient, method: str, url: str, *,
                                headers: dict, payload: dict | None, timeout: float,
-                               deadline: float, max_bytes: int = MAX_RESPONSE_BYTES) -> tuple[int, httpx.Headers, dict | None]:
+                               deadline: float, max_bytes: int = MAX_RESPONSE_BYTES,
+                               read_error_metadata: bool = False) -> tuple[int, httpx.Headers, dict | None]:
     """Read a successful JSON response under byte and wall-clock ceilings.
 
-    Non-success bodies are never consumed. The deadline covers headers, every
-    body chunk and normal stream cleanup, rather than resetting for each read.
-    Explicit identity encoding avoids decoding an unbounded compressed payload.
+    Non-success bodies are not consumed unless diagnostics explicitly opts in
+    to at most 4 KiB of scalar error metadata. Invalid or unavailable metadata
+    must not hide an already received HTTP status. The deadline covers headers,
+    every body chunk and normal stream cleanup. Identity encoding avoids
+    decoding an unbounded compressed payload.
     """
     request_deadline = min(deadline, time.monotonic() + timeout)
     remaining = request_deadline - time.monotonic()
     if remaining <= 0:
         raise TimeoutError('HTTP response deadline expired')
-    async with asyncio.timeout(remaining):
-        async with client.stream(method, url, json=payload, timeout=remaining,
-                                 headers={**headers, 'Accept-Encoding': 'identity'}) as response:
-            status, response_headers = response.status_code, response.headers
-            if not 200 <= status < 300:
-                return status, response_headers, None
-            encoding = response_headers.get('content-encoding', 'identity').strip().lower()
-            if encoding not in {'', 'identity'}:
-                raise ProviderError('模型服务未遵守 identity 响应编码要求', fault_type='format')
-            length = response_headers.get('content-length')
-            if length is not None:
+    status, response_headers = None, None
+    try:
+        async with asyncio.timeout(remaining):
+            async with client.stream(method, url, json=payload, timeout=remaining,
+                                     headers={**headers, 'Accept-Encoding': 'identity'}) as response:
+                status, response_headers = response.status_code, response.headers
+                is_error = not 200 <= status < 300
+                if is_error and not read_error_metadata:
+                    return status, response_headers, None
+                limit = ERROR_METADATA_BYTES if is_error else max_bytes
+                encoding = response_headers.get('content-encoding', 'identity').strip().lower()
+                if encoding not in {'', 'identity'}:
+                    raise ProviderError('模型服务未遵守 identity 响应编码要求', fault_type='format')
+                length = response_headers.get('content-length')
+                if length is not None:
+                    try:
+                        declared = int(length)
+                    except ValueError:
+                        raise ProviderError('模型响应 Content-Length 无效', fault_type='format') from None
+                    if declared < 0:
+                        raise ProviderError('模型响应 Content-Length 无效', fault_type='format')
+                    if declared > limit:
+                        raise ProviderError('模型响应超过大小限制', fault_type='budget')
+                content = bytearray()
+                async for chunk in response.aiter_bytes(chunk_size=min(RESPONSE_CHUNK_BYTES, limit + 1)):
+                    if len(chunk) > limit - len(content):
+                        raise ProviderError('模型响应超过大小限制', fault_type='budget')
+                    content.extend(chunk)
+                    # Buffered transports may yield without suspending.
+                    if time.monotonic() >= request_deadline:
+                        raise TimeoutError('HTTP response deadline expired')
                 try:
-                    declared = int(length)
-                except ValueError:
-                    raise ProviderError('模型响应 Content-Length 无效', fault_type='format') from None
-                if declared < 0:
-                    raise ProviderError('模型响应 Content-Length 无效', fault_type='format')
-                if declared > max_bytes:
-                    raise ProviderError('模型响应超过大小限制', fault_type='budget')
-            content = bytearray()
-            async for chunk in response.aiter_bytes(chunk_size=RESPONSE_CHUNK_BYTES):
-                if len(chunk) > max_bytes - len(content):
-                    raise ProviderError('模型响应超过大小限制', fault_type='budget')
-                content.extend(chunk)
-                # Async transports may yield buffered chunks without suspending;
-                # check monotonic time in addition to the cancellation deadline.
-                if time.monotonic() >= request_deadline:
-                    raise TimeoutError('HTTP response deadline expired')
-            try:
-                data = json.loads(content)
-            except (ValueError, UnicodeDecodeError, RecursionError):
-                raise ProviderError('模型服务返回无效 JSON', fault_type='format') from None
-            if not isinstance(data, dict):
-                raise ProviderError('模型服务必须返回 JSON 对象', fault_type='format')
-            return status, response_headers, data
+                    data = json.loads(content)
+                except (ValueError, UnicodeDecodeError, RecursionError):
+                    raise ProviderError('模型服务返回无效 JSON', fault_type='format') from None
+                if not isinstance(data, dict):
+                    raise ProviderError('模型服务必须返回 JSON 对象', fault_type='format')
+                return status, response_headers, error_metadata(data) if is_error else data
+    except (ProviderError, TimeoutError, httpx.TimeoutException, httpx.TransportError):
+        if read_error_metadata and status is not None and not 200 <= status < 300:
+            return status, response_headers, None
+        raise
 
 
 def usage_counts(data: dict) -> dict:

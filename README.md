@@ -8,7 +8,7 @@ TraceForge 是面向维护多个代码仓库的开发者的本地 Agent 工作�
 
 ![实际工作台：审批后的测试结果](docs/screenshots/verified-tests.jpg)
 
-本次已验证后端 **205 项通过**、Docker 中结算样例从 **4 项失败 → 8 项通过**；真实模型服务生成仍受 403/429/超时阻塞，完整证据和限制见 [验收记录](docs/acceptance.md)。
+本次已验证后端 **235 项通过**、Docker 中结算样例从 **4 项失败 → 8 项通过**，并通过 wheel 独立安装验收；真实模型服务生成仍受 403/429/超时阻塞，完整证据和限制见 [验收记录](docs/acceptance.md)。
 
 ## 可以现场演示什么
 
@@ -21,7 +21,7 @@ TraceForge 是面向维护多个代码仓库的开发者的本地 Agent 工作�
 
 ## 快速启动（Windows）
 
-需要 Python 3.11+、Node.js 22+、uv。本版按源码仓库安装运行；示例、基准和前端资源随仓库提供，尚未制作自包含 wheel 发布包。在仓库目录执行：
+从源码运行需要 Python 3.11+、Node.js 22+、uv。在仓库目录执行：
 
 ```powershell
 uv sync --extra dev
@@ -35,6 +35,8 @@ cd ..
 打开 `http://127.0.0.1:8710`，点击“离线演示”，审阅后批准补丁。演示运行的是仓库内可信的合成 Python 服务，不需要 API Key 或 Docker。测试前后都在副本中运行，原始样例持续保持有缺陷的状态，便于重复演示。
 
 macOS/Linux 的启动命令为 `.venv/bin/python -m traceforge serve`。项目包含对应 CI 配置，但请以实际运行结果为准。
+
+也可以安装已构建的 `dist/traceforge_agent-0.1.0-py3-none-any.whl`。wheel 内含前端、演示和十个基准案例；安装后的用户无需 Node.js 或源码目录。构建、独立安装和复现步骤见 [发布包说明](docs/release.md)。这不包含 Python 解释器、Docker 或第三方 Python 依赖，依赖仍由安装器解析安装。
 
 ## 接入自己的仓库
 
@@ -128,6 +130,7 @@ SQLite 的事务与租约适用于单机多 worker。系统是可重入的至少
 - [面试讲解与追问](docs/interview-playbook.md)
 - [现场演示流程](docs/demo-script.md)
 - [接口与模块契约](docs/implementation-contract.md)
+- [发布包与独立安装验收](docs/release.md)
 - [配置模板](.env.example)
 
 ## 目录

@@ -9,6 +9,8 @@ __pycache__/
 .traceforge/
 node_modules/
 web/dist/
+build/
+dist/
 *.egg-info/
 *.db
 *.db-shm

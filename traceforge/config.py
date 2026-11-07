@@ -5,13 +5,12 @@ import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
-PACKAGE_ROOT = Path(__file__).resolve().parent.parent
-DEMO_ROOT = PACKAGE_ROOT / "examples" / "checkout-service"
+from .paths import DEMO_ROOT, PACKAGE_ROOT, default_data_dir  # noqa: F401 - compatibility exports
 
 
 @dataclass
 class Settings:
-    data_dir: Path = field(default_factory=lambda: PACKAGE_ROOT / ".traceforge")
+    data_dir: Path = field(default_factory=default_data_dir)
     allowed_roots: list[Path] = field(default_factory=lambda: [DEMO_ROOT])
     api_key: str = ""
     base_url: str = "https://api.openai.com/v1"
@@ -39,7 +38,7 @@ class Settings:
         if style not in {"chat", "responses"}:
             raise ValueError("TRACEFORGE_API_STYLE must be chat or responses")
         return cls(
-            data_dir=Path(env.get("TRACEFORGE_DATA_DIR", str(PACKAGE_ROOT / ".traceforge"))).resolve(),
+            data_dir=Path(env.get("TRACEFORGE_DATA_DIR", str(default_data_dir()))).resolve(),
             allowed_roots=[DEMO_ROOT.resolve(), *(Path(x).resolve() for x in roots)],
             api_key=env.get("TRACEFORGE_API_KEY", ""),
             base_url=env.get("TRACEFORGE_BASE_URL", "https://api.openai.com/v1").rstrip("/"),

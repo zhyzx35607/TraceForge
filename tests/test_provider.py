@@ -185,6 +185,24 @@ async def test_error_body_never_read_and_stream_closed():
 
 
 @pytest.mark.asyncio
+async def test_provider_never_follows_redirect_or_persists_error_metadata():
+    requests, events = [], []
+    stream = TrackedStream([b'{"error":{"message":"unit-test-placeholder"}}'])
+    def handle(request):
+        requests.append(request)
+        return httpx.Response(307, stream=stream, headers={'Location': 'https://untrusted.example/responses'})
+    provider = OpenAIProvider(settings(), transport=httpx.MockTransport(handle),
+                              on_event=lambda kind, payload: events.append((kind, payload)))
+    with pytest.raises(ProviderError) as caught:
+        await provider.complete([], remaining_seconds=5)
+    assert len(requests) == 1
+    assert stream.closed and stream.read_count == 0
+    assert 'HTTP 307' in str(caught.value)
+    assert 'unit-test-placeholder' not in str(events)
+    assert 'untrusted' not in str(events)
+
+
+@pytest.mark.asyncio
 async def test_declared_oversize_rejected_before_read():
     stream = TrackedStream([b'should not read'])
     provider = OpenAIProvider(settings(), transport=httpx.MockTransport(

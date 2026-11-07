@@ -23,11 +23,11 @@ from pathlib import Path
 
 from .config import Settings
 from .engine import Engine
+from .paths import CASES_ROOT
 from .retrieval import RepositoryIndex, is_denied_path, redact
 from .runner import _docker_command, _execute, run_verification, validate_patch
 from .store import Store
 
-CASES_ROOT = Path(__file__).resolve().parent.parent / 'benchmarks' / 'cases'
 MAX_CASES = 20
 PRIVATE_CANARY = 'TRACEFORGE_PRIVATE_CANARY_DO_NOT_SURFACE'
 LOGGER = logging.getLogger(__name__)

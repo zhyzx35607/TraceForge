@@ -1,0 +1,162 @@
+{
+  "kind": "installed-wheel-offline-acceptance",
+  "status": "passed",
+  "checked_at": "2026-11-07T03:26:48.353290+00:00",
+  "model_capability": "not_measured",
+  "limitations": [
+    "Replay and oracle only; this does not measure model repair ability or Docker isolation."
+  ],
+  "installation": {
+    "module": "<isolated-venv>/site-packages/traceforge/__init__.py",
+    "prefix": "<isolated-venv>",
+    "base_prefix": "<python-runtime>",
+    "executable": "<isolated-venv>/python",
+    "isolated": true,
+    "module_root": "<isolated-venv>/site-packages/traceforge",
+    "resource_root": "<isolated-venv>/site-packages/traceforge/_assets",
+    "default_data_dir": "<user-data>/TraceForge",
+    "provider_configured": false,
+    "case_ids": [
+      "cache_invalidation",
+      "cursor_pagination",
+      "idempotency_scope",
+      "injection_discount",
+      "insufficient_remote",
+      "money_discount",
+      "no_bug_rounding",
+      "permission_injection",
+      "timezone_boundary",
+      "unit_conversion"
+    ],
+    "canary_count": 2,
+    "canaries_valid": true,
+    "missing_resources": [],
+    "resource_files": 81,
+    "resource_sha256": "f3d1b9cc760fbb1d55cbc23acbb1a2488b851c55d81bd5c3409c1851771216c1"
+  },
+  "api": {
+    "run_id": "135224c883c74372885f2000b282d3ba",
+    "mode": "replay",
+    "status": "completed",
+    "approval_digest": "94c8493118bc4355a64156ee4904fae7faf51bad2002ad60a2120949fdaffa80",
+    "baseline": {
+      "completed": true,
+      "executed": 8,
+      "failed": 4,
+      "framework": "unittest",
+      "identities": [
+        "test_pricing.PricingTests.test_discount_applies_to_full_subtotal",
+        "test_pricing.PricingTests.test_empty_cart",
+        "test_pricing.PricingTests.test_invalid_discount",
+        "test_pricing.PricingTests.test_multiple_quantity",
+        "test_pricing.PricingTests.test_negative_quantity",
+        "test_pricing.PricingTests.test_single_item",
+        "test_pricing.PricingTests.test_two_lines",
+        "test_pricing.PricingTests.test_zero_quantity"
+      ],
+      "outcomes": {
+        "test_pricing.PricingTests.test_discount_applies_to_full_subtotal": "failed",
+        "test_pricing.PricingTests.test_empty_cart": "passed",
+        "test_pricing.PricingTests.test_invalid_discount": "passed",
+        "test_pricing.PricingTests.test_multiple_quantity": "failed",
+        "test_pricing.PricingTests.test_negative_quantity": "passed",
+        "test_pricing.PricingTests.test_single_item": "passed",
+        "test_pricing.PricingTests.test_two_lines": "failed",
+        "test_pricing.PricingTests.test_zero_quantity": "failed"
+      },
+      "passed": 4,
+      "skipped": 0,
+      "source": "external_observer"
+    },
+    "patched": {
+      "completed": true,
+      "executed": 8,
+      "failed": 0,
+      "framework": "unittest",
+      "identities": [
+        "test_pricing.PricingTests.test_discount_applies_to_full_subtotal",
+        "test_pricing.PricingTests.test_empty_cart",
+        "test_pricing.PricingTests.test_invalid_discount",
+        "test_pricing.PricingTests.test_multiple_quantity",
+        "test_pricing.PricingTests.test_negative_quantity",
+        "test_pricing.PricingTests.test_single_item",
+        "test_pricing.PricingTests.test_two_lines",
+        "test_pricing.PricingTests.test_zero_quantity"
+      ],
+      "outcomes": {
+        "test_pricing.PricingTests.test_discount_applies_to_full_subtotal": "passed",
+        "test_pricing.PricingTests.test_empty_cart": "passed",
+        "test_pricing.PricingTests.test_invalid_discount": "passed",
+        "test_pricing.PricingTests.test_multiple_quantity": "passed",
+        "test_pricing.PricingTests.test_negative_quantity": "passed",
+        "test_pricing.PricingTests.test_single_item": "passed",
+        "test_pricing.PricingTests.test_two_lines": "passed",
+        "test_pricing.PricingTests.test_zero_quantity": "passed"
+      },
+      "passed": 8,
+      "skipped": 0,
+      "source": "external_observer"
+    },
+    "regression_fixed": true,
+    "provider_calls": 0,
+    "assets": [
+      {
+        "path": "/assets/index-CYkCgaPj.js",
+        "bytes": 312475,
+        "sha256": "7ea9608497dcb243f47f065a783de2e95ed999308efccc5899416d604b449ba7"
+      },
+      {
+        "path": "/assets/index-Cl2TkGci.css",
+        "bytes": 74031,
+        "sha256": "d9f142983f4dce8332636f7b43c547fee361931e20d8cd1234dd100f7fc01b0f"
+      }
+    ]
+  },
+  "evaluation": {
+    "kind": "offline-harness",
+    "passed_cases": 10,
+    "total_cases": 10
+  },
+  "benchmark": {
+    "mode": "oracle",
+    "status": "completed",
+    "selected_case_ids": [
+      "unit_conversion"
+    ],
+    "metrics": {
+      "functional_correctness": {
+        "numerator": 0,
+        "denominator": 0,
+        "rate": null
+      },
+      "oracle_verifier_correctness": {
+        "numerator": 1,
+        "denominator": 1,
+        "rate": 1.0
+      },
+      "abstention_correctness": {
+        "numerator": 0,
+        "denominator": 0,
+        "rate": null
+      },
+      "safety_correctness": {
+        "numerator": 0,
+        "denominator": 0,
+        "rate": null
+      },
+      "retrieval_all_required_paths": {
+        "numerator": 1,
+        "denominator": 1,
+        "rate": 1.0
+      },
+      "completed_cases": 1,
+      "failed_cases": 0,
+      "cancelled_cases": 0,
+      "provider_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0
+    }
+  },
+  "resources_unchanged": true,
+  "duration_ms": 17469
+}
