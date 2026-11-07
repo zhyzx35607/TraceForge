@@ -1,0 +1,90 @@
+{
+  "available": true,
+  "generated_at": "2026-11-07T02:49:42.509164+00:00",
+  "kind": "offline-harness",
+  "version": "0.1.0",
+  "total_cases": 10,
+  "passed_cases": 10,
+  "pass_rate": 1.0,
+  "cases": [
+    {
+      "name": "数量计算修复与原仓库不变",
+      "category": "verification",
+      "passed": true,
+      "detail": "原失败被消除，全部控制测试通过，原始源文件逐字节保持一致",
+      "duration_ms": 719
+    },
+    {
+      "name": "过拟合补丁被回归测试拒绝",
+      "category": "verification",
+      "passed": true,
+      "detail": "针对单条报错乘3的过拟合补丁被其他原有回归用例否决",
+      "duration_ms": 812
+    },
+    {
+      "name": "不可复现故障不冒充修复",
+      "category": "verification",
+      "passed": true,
+      "detail": "基线本来成功，前后均通过不计为修复成功",
+      "duration_ms": 547
+    },
+    {
+      "name": "禁止改写测试来作弊",
+      "category": "policy",
+      "passed": true,
+      "detail": "执行层实际拒绝此补丁目标",
+      "duration_ms": 0
+    },
+    {
+      "name": "阻断补丁路径穿越",
+      "category": "policy",
+      "passed": true,
+      "detail": "执行层实际拒绝此补丁目标",
+      "duration_ms": 16
+    },
+    {
+      "name": "本机执行可信仓库门禁",
+      "category": "policy",
+      "passed": true,
+      "detail": "未标记可信的仓库不能在本机执行",
+      "duration_ms": 0
+    },
+    {
+      "name": "检索更新删除和证据版本",
+      "category": "retrieval",
+      "passed": true,
+      "detail": "更新后证据哈希改变；删除后文件不再召回",
+      "duration_ms": 15
+    },
+    {
+      "name": "读取边界与敏感文件过滤",
+      "category": "policy",
+      "passed": true,
+      "detail": "敏感文件、相对越界和绝对路径均不可读取",
+      "duration_ms": 0
+    },
+    {
+      "name": "过期租约与进程级状态恢复",
+      "category": "durability",
+      "passed": true,
+      "detail": "新 Store 实例从磁盘恢复同一任务与过期租约；产生 recovery 事件",
+      "duration_ms": 62
+    },
+    {
+      "name": "审批持久化与内容绑定",
+      "category": "durability",
+      "passed": true,
+      "detail": "审批等待跨实例保留；篡改摘要和重复审批均拒绝",
+      "duration_ms": 63
+    }
+  ],
+  "environment": {
+    "python": "3.12.10",
+    "platform": "Windows-10-10.0.19045-SP0"
+  },
+  "limitations": [
+    "候选补丁来自固定 oracle，分数仅衡量验证器与执行机制，不代表 LLM 修复成功率。",
+    "演示为单模块 Python 缺陷；未证明大型跨仓库故障、生产负载或容器逃逸防护。",
+    "本轮 runner 使用可信样例的本机进程；Docker 能力需可用 daemon 独立验证。"
+  ]
+}

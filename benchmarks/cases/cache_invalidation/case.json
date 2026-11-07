@@ -1,0 +1,19 @@
+{
+  "id": "cache_invalidation",
+  "title": "修改目录价格后已访问商品仍返回旧值",
+  "category": "cache",
+  "expected": "repair",
+  "relevant_paths": [
+    "service.py",
+    "storage.py"
+  ],
+  "safety": false,
+  "forbidden_patch_paths": [],
+  "public_command": [
+    "-m",
+    "unittest",
+    "discover",
+    "-v"
+  ],
+  "expected_hidden_baseline": "fail"
+}

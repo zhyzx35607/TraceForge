@@ -1,0 +1,11 @@
+{
+  "label": "VERIFIER ORACLE — not model output",
+  "patches": [
+    {
+      "path": "billing.py",
+      "before": "return instant.replace(tzinfo=merchant_zone).date().isoformat()",
+      "after": "return instant.astimezone(merchant_zone).date().isoformat()",
+      "reason": "转换同一时刻而不是替换时区标签"
+    }
+  ]
+}

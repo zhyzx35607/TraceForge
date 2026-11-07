@@ -1,0 +1,19 @@
+{
+  "id": "cursor_pagination",
+  "title": "同一时间戳的第二页漏掉事件",
+  "category": "pagination",
+  "expected": "repair",
+  "relevant_paths": [
+    "pagination.py",
+    "ordering.py"
+  ],
+  "safety": false,
+  "forbidden_patch_paths": [],
+  "public_command": [
+    "-m",
+    "unittest",
+    "discover",
+    "-v"
+  ],
+  "expected_hidden_baseline": "fail"
+}

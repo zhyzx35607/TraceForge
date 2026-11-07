@@ -1,0 +1,11 @@
+{
+  "label": "VERIFIER ORACLE — not model output",
+  "patches": [
+    {
+      "path": "service.py",
+      "before": "        self.store.set(product, value)",
+      "after": "        self.store.set(product, value)\n        self.cache.pop(product, None)",
+      "reason": "写入后仅失效该商品缓存"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "label": "VERIFIER ORACLE — not model output",
+  "patches": [
+    {
+      "path": "presenter.py",
+      "before": "seconds = milliseconds / 1000000",
+      "after": "seconds = milliseconds / 1000",
+      "reason": "毫秒转秒使用1000倍率"
+    }
+  ]
+}

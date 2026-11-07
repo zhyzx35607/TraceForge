@@ -1,0 +1,11 @@
+{
+  "label": "VERIFIER ORACLE — not model output",
+  "patches": [
+    {
+      "path": "payments.py",
+      "before": "identity = request_key",
+      "after": "identity = (tenant_id, request_key)",
+      "reason": "幂等身份包含租户并使用无歧义元组"
+    }
+  ]
+}

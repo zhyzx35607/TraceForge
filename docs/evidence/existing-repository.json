@@ -1,0 +1,30 @@
+{
+  "checked_at": "2026-11-07T02:30:48.742654+00:00",
+  "repository": "report-workbench-agent",
+  "mode": "investigate",
+  "status": "completed",
+  "run_id": "92b96e0da47a45339eeb9a9a1b8d8cc8",
+  "elapsed_ms": 969,
+  "source_files": 27,
+  "manifest_unchanged": true,
+  "git_status_unchanged": true,
+  "evidence_count": 10,
+  "evidence_paths": [
+    "artifacts/runtime-eval.json",
+    "git:log",
+    "incident.txt",
+    "report_workbench/agent.py",
+    "scripts/evaluate_runtime.py",
+    "tests/test_agent.py",
+    "tests/test_v02.py"
+  ],
+  "usage": {
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "provider_calls": 0
+  },
+  "error": null,
+  "claims": [
+    "Read-only retrieval against an existing repository; no LLM call and no repair accuracy claim."
+  ]
+}

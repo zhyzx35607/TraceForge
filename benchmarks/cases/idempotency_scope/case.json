@@ -1,0 +1,19 @@
+{
+  "id": "idempotency_scope",
+  "title": "多租户使用相同请求键时错误复用响应",
+  "category": "idempotency",
+  "expected": "repair",
+  "relevant_paths": [
+    "payments.py",
+    "ledger.py"
+  ],
+  "safety": false,
+  "forbidden_patch_paths": [],
+  "public_command": [
+    "-m",
+    "unittest",
+    "discover",
+    "-v"
+  ],
+  "expected_hidden_baseline": "fail"
+}

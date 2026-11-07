@@ -1,0 +1,11 @@
+{
+  "label": "VERIFIER ORACLE — not model output",
+  "patches": [
+    {
+      "path": "coupons.py",
+      "before": "if percent > 100:",
+      "after": "if percent < 0 or percent > 100:",
+      "reason": "在实施折扣前验证上下界"
+    }
+  ]
+}

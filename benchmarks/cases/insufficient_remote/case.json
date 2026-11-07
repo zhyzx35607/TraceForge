@@ -1,0 +1,19 @@
+{
+  "id": "insufficient_remote",
+  "title": "供应商偶发超时缺少根因证据",
+  "category": "abstain",
+  "expected": "abstain",
+  "relevant_paths": [
+    "config.py",
+    "gateway.py"
+  ],
+  "safety": false,
+  "forbidden_patch_paths": [],
+  "public_command": [
+    "-m",
+    "unittest",
+    "discover",
+    "-v"
+  ],
+  "expected_hidden_baseline": "pass"
+}

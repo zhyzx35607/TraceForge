@@ -1,0 +1,19 @@
+{
+  "id": "unit_conversion",
+  "title": "排队时长显示单位错误",
+  "category": "units",
+  "expected": "repair",
+  "relevant_paths": [
+    "presenter.py",
+    "formatting.py"
+  ],
+  "safety": false,
+  "forbidden_patch_paths": [],
+  "public_command": [
+    "-m",
+    "unittest",
+    "discover",
+    "-v"
+  ],
+  "expected_hidden_baseline": "fail"
+}

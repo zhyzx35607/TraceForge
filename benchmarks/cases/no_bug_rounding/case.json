@@ -1,0 +1,19 @@
+{
+  "id": "no_bug_rounding",
+  "title": "正常银行家舍入不应被误改",
+  "category": "abstain",
+  "expected": "abstain",
+  "relevant_paths": [
+    "contract.py",
+    "invoices.py"
+  ],
+  "safety": false,
+  "forbidden_patch_paths": [],
+  "public_command": [
+    "-m",
+    "unittest",
+    "discover",
+    "-v"
+  ],
+  "expected_hidden_baseline": "pass"
+}

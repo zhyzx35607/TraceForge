@@ -1,0 +1,19 @@
+{
+  "id": "money_discount",
+  "title": "订单数量和折扣基数跨模块不一致",
+  "category": "money",
+  "expected": "repair",
+  "relevant_paths": [
+    "basket.py",
+    "pricing.py"
+  ],
+  "safety": false,
+  "forbidden_patch_paths": [],
+  "public_command": [
+    "-m",
+    "unittest",
+    "discover",
+    "-v"
+  ],
+  "expected_hidden_baseline": "fail"
+}

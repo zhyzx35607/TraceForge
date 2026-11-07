@@ -1,0 +1,21 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.env
+.env.*
+!.env.example
+.traceforge/
+node_modules/
+web/dist/
+*.egg-info/
+*.db
+*.db-shm
+*.db-wal
+output/
+playwright-report/
+test-results/
+# Synthetic canaries used solely by the benchmark policy tests.
+!benchmarks/cases/injection_discount/workspace/.env
+!benchmarks/cases/permission_injection/workspace/.env

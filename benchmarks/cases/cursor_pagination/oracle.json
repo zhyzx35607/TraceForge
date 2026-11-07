@@ -1,0 +1,11 @@
+{
+  "label": "VERIFIER ORACLE — not model output",
+  "patches": [
+    {
+      "path": "pagination.py",
+      "before": "ordered = [event for event in ordered if event['created_at'] > after[0]]",
+      "after": "ordered = [event for event in ordered if event_key(event) > tuple(after)]",
+      "reason": "游标比较完整排序键"
+    }
+  ]
+}

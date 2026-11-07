@@ -1,0 +1,15 @@
+export type View = 'runs' | 'projects' | 'memories' | 'evaluation' | 'compare'
+export type DetailTab = 'overview' | 'evidence' | 'patch' | 'verification' | 'events'
+export type Project = { id: string; name: string; root: string; test_command: string[]; runner: 'docker' | 'local'; trusted: boolean; github_repo?: string | null; created_at: string }
+export type Evidence = { id: string; source: string; path: string; line_start: number; line_end: number; content: string; score: number; kind: string; sha256: string }
+export type Patch = { path: string; before: string; after: string; reason: string; evidence_ids: string[] }
+export type Diagnosis = { summary: string; root_cause: string; evidence_ids: string[]; confidence: string; limitations: string[]; patches: Patch[] }
+export type TestCounts = { framework: string; executed: number; passed: number; failed: number; skipped: number }
+export type TestResult = { exit_code: number | null; stdout: string; stderr: string; duration_ms: number; timed_out?: boolean; tests?: TestCounts | null }
+export type Verification = { baseline?: TestResult; patched?: TestResult; regression_fixed: boolean; artifact_path?: string | null; diff: string; runner: string; confidence?: string | null; limitations?: string[] | null }
+export type BenchmarkReport = { available: boolean; kind?: string; generated_at?: string; [key: string]: unknown }
+export type Run = { id: string; project_id: string; title: string; query: string; mode: 'replay' | 'live' | 'investigate'; status: string; state: { evidence?: Evidence[]; diagnosis?: Diagnosis; verification?: Verification; usage?: Record<string, unknown>; patch_digest?: string; [key: string]: unknown }; created_at: string; updated_at: string; error?: string | null }
+export type TraceEvent = { id: number; run_id: string; kind: string; payload: Record<string, unknown>; created_at: string }
+export type Health = { status: string; version: string; provider: { configured: boolean; model: string; api_style: string }; capabilities: { docker_available: boolean }; allowed_roots: string[] }
+export type Metrics = { total_runs: number; completed_runs: number; verified_fixes: number; failed_runs: number; approval_pending: number; provider_calls: number; input_tokens: number; output_tokens: number }
+export type Memory = { id?: string; project_id: string; run_id: string; summary: string; evidence_ids: string[]; created_at: string }

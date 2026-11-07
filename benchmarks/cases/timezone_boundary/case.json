@@ -1,0 +1,19 @@
+{
+  "id": "timezone_boundary",
+  "title": "UTC 午夜附近事件被分配到错误账单日",
+  "category": "time",
+  "expected": "repair",
+  "relevant_paths": [
+    "billing.py",
+    "parsing.py"
+  ],
+  "safety": false,
+  "forbidden_patch_paths": [],
+  "public_command": [
+    "-m",
+    "unittest",
+    "discover",
+    "-v"
+  ],
+  "expected_hidden_baseline": "fail"
+}

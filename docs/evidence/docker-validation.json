@@ -1,0 +1,78 @@
+{
+  "status": "completed",
+  "run_id": "360638965c3b46e28a1532980a231bbd",
+  "source_unchanged": true,
+  "runner": "docker",
+  "regression_fixed": true,
+  "limitations": [
+    "测试报告来自仓库外观察器；同一 Python 进程内的反射或 monkey-patching 不构成密码学防篡改保证。"
+  ],
+  "baseline": {
+    "exit_code": 1,
+    "duration_ms": 25250,
+    "tests": {
+      "completed": true,
+      "executed": 8,
+      "failed": 4,
+      "framework": "unittest",
+      "identities": [
+        "test_pricing.PricingTests.test_discount_applies_to_full_subtotal",
+        "test_pricing.PricingTests.test_empty_cart",
+        "test_pricing.PricingTests.test_invalid_discount",
+        "test_pricing.PricingTests.test_multiple_quantity",
+        "test_pricing.PricingTests.test_negative_quantity",
+        "test_pricing.PricingTests.test_single_item",
+        "test_pricing.PricingTests.test_two_lines",
+        "test_pricing.PricingTests.test_zero_quantity"
+      ],
+      "outcomes": {
+        "test_pricing.PricingTests.test_discount_applies_to_full_subtotal": "failed",
+        "test_pricing.PricingTests.test_empty_cart": "passed",
+        "test_pricing.PricingTests.test_invalid_discount": "passed",
+        "test_pricing.PricingTests.test_multiple_quantity": "failed",
+        "test_pricing.PricingTests.test_negative_quantity": "passed",
+        "test_pricing.PricingTests.test_single_item": "passed",
+        "test_pricing.PricingTests.test_two_lines": "failed",
+        "test_pricing.PricingTests.test_zero_quantity": "failed"
+      },
+      "passed": 4,
+      "skipped": 0,
+      "source": "external_observer"
+    },
+    "observation_status": "completed"
+  },
+  "patched": {
+    "exit_code": 0,
+    "duration_ms": 2532,
+    "tests": {
+      "completed": true,
+      "executed": 8,
+      "failed": 0,
+      "framework": "unittest",
+      "identities": [
+        "test_pricing.PricingTests.test_discount_applies_to_full_subtotal",
+        "test_pricing.PricingTests.test_empty_cart",
+        "test_pricing.PricingTests.test_invalid_discount",
+        "test_pricing.PricingTests.test_multiple_quantity",
+        "test_pricing.PricingTests.test_negative_quantity",
+        "test_pricing.PricingTests.test_single_item",
+        "test_pricing.PricingTests.test_two_lines",
+        "test_pricing.PricingTests.test_zero_quantity"
+      ],
+      "outcomes": {
+        "test_pricing.PricingTests.test_discount_applies_to_full_subtotal": "passed",
+        "test_pricing.PricingTests.test_empty_cart": "passed",
+        "test_pricing.PricingTests.test_invalid_discount": "passed",
+        "test_pricing.PricingTests.test_multiple_quantity": "passed",
+        "test_pricing.PricingTests.test_negative_quantity": "passed",
+        "test_pricing.PricingTests.test_single_item": "passed",
+        "test_pricing.PricingTests.test_two_lines": "passed",
+        "test_pricing.PricingTests.test_zero_quantity": "passed"
+      },
+      "passed": 8,
+      "skipped": 0,
+      "source": "external_observer"
+    },
+    "observation_status": "completed"
+  }
+}
