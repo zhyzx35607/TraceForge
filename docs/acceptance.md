@@ -30,6 +30,8 @@
 
 TestClient 的完整测试输出有一条 Starlette/httpx 弃用提示，不影响当前通过结果；后续升级依赖时应处理，不能将它隐藏为零 warning。
 
+首次 GitHub Actions 运行 [`42346038331`](https://github.com/zhyzx35607/TraceForge/actions/runs/42346038331) 中，Linux 两个 Python 版本、前端构建和 wheel 独立安装通过；Windows Python 3.12 的 pytest 通过，但随后 `evaluate` 在 cp1252 标准输出写中文时出现 `UnicodeEncodeError`，矩阵默认快速失败取消了 Windows 3.11。CLI 已统一配置 UTF-8 输出，并添加强制 `PYTHONIOENCODING=cp1252` 的真实子进程回归，检查退出码、中文 JSON、10/10 机制评测与落盘报告一致；矩阵改为独立完成。最终云端结果请查看对应提交的 Actions。
+
 首次本轮完整执行为 454 passed、1 failed、3 skipped：pytest 观察器集成用例触发了其 5 秒测试上限，记录保留在本机 `.traceforge/acceptance/pytest-boundaries-first.txt`。随后使用相同 fixture 测量两种 pytest 入口，共 12 个前后测试阶段，实际耗时为 1.203–4.046 秒，均得到正确观察报告。仅把该结果正确性用例的上限调整为 15 秒；生产超时默认值未修改，0.15 秒超时终止用例仍通过。API 契约单元测试也隔离了本机 Docker 探测依赖；真实 Docker 验收单独执行。
 
 ## 审查发现并实际修复的问题

@@ -2,7 +2,16 @@ import argparse
 import sys
 
 
+def _configure_utf8_stdio() -> None:
+    """Keep JSON diagnostics printable on Windows consoles and CI runners."""
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is not None:
+            reconfigure(encoding="utf-8", errors="replace")
+
+
 def main():
+    _configure_utf8_stdio()
     parser = argparse.ArgumentParser(prog="traceforge")
     commands = parser.add_subparsers(dest="command")
     serve = commands.add_parser("serve", help="Start the local workbench")
