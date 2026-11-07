@@ -108,3 +108,49 @@ def test_artifact_traversal_is_rejected(client, tmp_path):
     secret.write_text("outside", encoding="utf-8")
     client.app.state.store.update_run(run["id"], state={"verification": {"artifact_path": str(secret)}})
     assert client.get(f"/api/runs/{run['id']}/artifact").status_code == 404
+
+
+def test_report_download_formats_and_read_only_snapshot(client):
+    run = client.post("/api/demo").json()["run"]
+    store = client.app.state.store
+    before = store.get_run(run["id"])
+    events_before = store.events(run["id"])
+    url = f"/api/runs/{run['id']}/report"
+    document = client.get(url + "?format=json")
+    assert document.status_code == 200
+    assert document.headers["cache-control"] == "no-store"
+    assert document.headers["x-content-type-options"] == "nosniff"
+    assert document.headers["content-disposition"].endswith('.json"')
+    body = document.json()
+    assert body["run"]["id"] == run["id"]
+    assert body["run"]["mode"] == "replay"
+    assert body["verification"]["verified"] is False
+    assert len(body["content_sha256"]) == 64
+    markdown = client.get(url)
+    assert markdown.status_code == 200
+    assert markdown.headers["content-type"].startswith("text/markdown")
+    assert markdown.headers["content-disposition"].endswith('.md"')
+    assert "TraceForge" in markdown.text
+    assert client.get(url + "?format=html").status_code == 422
+    assert client.get("/api/runs/not-a-run/report").status_code == 404
+    assert store.get_run(run["id"]) == before
+    assert store.events(run["id"]) == events_before
+
+
+def test_report_download_requires_token_and_removes_configured_secrets(tmp_path):
+    api_key, token = "synthetic-provider-secret", "synthetic-access-token"
+    app = create_app(Settings(data_dir=tmp_path, api_key=api_key, api_token=token), start_workers=False)
+    store = app.state.store
+    project = store.create_project({"name": "private", "root": str(tmp_path)})
+    run = store.create_run({"project_id": project["id"], "title": f"Issue {api_key}",
+                            "query": f"Symptom {token} {tmp_path}", "mode": "investigate"})
+    store.update_run(run["id"], state={"agent_messages": [{"role": "assistant", "content": "private-continuation"}]})
+    with TestClient(app) as client:
+        url = f"/api/runs/{run['id']}/report"
+        assert client.get(url).status_code == 401
+        for format in ("json", "markdown"):
+            response = client.get(f"{url}?format={format}", headers={"Authorization": f"Bearer {token}"})
+            assert response.status_code == 200
+            assert all(value not in response.text for value in (api_key, token, "private-continuation"))
+            assert str(tmp_path).replace("\\", "\\\\") not in response.text
+            assert "[REDACTED]" in response.text or "REDACTED" in response.text

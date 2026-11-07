@@ -217,9 +217,21 @@ class ReleaseSmoke:
                         'Test identities changed across verification')
                 metrics = self.request('/api/metrics')
                 require(metrics['provider_calls'] == 0, 'Replay unexpectedly called a provider')
+                document = self.request(f'/api/runs/{created["id"]}/report?format=json')
+                content_hash = document.pop('content_sha256')
+                calculated = hashlib.sha256(json.dumps(document, ensure_ascii=False, sort_keys=True,
+                                                        separators=(',', ':')).encode('utf-8')).hexdigest()
+                require(content_hash == calculated, 'Exported report content digest does not match')
+                require(document['verification']['verified'] and document['run']['mode'] == 'replay',
+                        'Exported report did not preserve the verified replay outcome')
+                require(all('content' not in item for item in document['evidence']), 'Report exported source bodies')
+                markdown = self.request(f'/api/runs/{created["id"]}/report?format=markdown', raw=True)
+                require(b'# TraceForge' in markdown and content_hash.encode() in markdown, 'Markdown report missing')
                 return {'run_id': created['id'], 'mode': 'replay', 'status': completed['status'],
                         'approval_digest': digest, 'baseline': baseline['tests'], 'patched': patched['tests'],
-                        'regression_fixed': True, 'provider_calls': metrics['provider_calls'], 'assets': assets}
+                        'regression_fixed': True, 'provider_calls': metrics['provider_calls'], 'assets': assets,
+                        'report_export': {'json': True, 'markdown': True, 'content_sha256': content_hash,
+                                          'digest_verified': True}}
             finally:
                 self.stop(process)
 

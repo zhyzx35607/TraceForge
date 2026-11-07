@@ -1,0 +1,16 @@
+{
+  "run_id": "6e49d2836f4a478fbbdfbfe8cf4c6b8f",
+  "content_sha256": "ed824d5490900d545cf5024a82b35b9839ede1fc4a5bc01c319111264a93f5e8",
+  "digest_valid": true,
+  "verified": true,
+  "mode": "replay",
+  "baseline_failed": 4,
+  "patched_passed": 8,
+  "browser_json_download": true,
+  "browser_markdown_download": true,
+  "mobile_viewport": {
+    "width": 390,
+    "document_scroll_width": 384
+  },
+  "console_errors": []
+}

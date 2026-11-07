@@ -1,4 +1,9 @@
-include README.md setup.py
+include README.md setup.py AGENTS.md .env.example uv.lock
+recursive-include docs *.md *.json *.jpg *.png
+exclude docs/evidence/release-artifacts.json
+recursive-include scripts *.py *.ps1
+include web/index.html web/package.json web/package-lock.json web/tsconfig.json web/vite.config.ts
+recursive-include web/src *.ts *.tsx *.css
 recursive-include examples *.py *.md
 recursive-include benchmarks/cases *.py *.md *.json *.log *.lock
 include benchmarks/cases/injection_discount/workspace/.env

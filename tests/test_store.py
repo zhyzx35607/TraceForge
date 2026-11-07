@@ -16,6 +16,41 @@ def make_run(store):
     return store.create_run({"project_id": project["id"], "title": "regression", "query": "broken total", "mode": "investigate"})
 
 
+def test_report_snapshot_is_consistent_across_a_concurrent_commit(store, monkeypatch):
+    run = make_run(store)
+    writer = Store(store.db_path)
+    original = store._run
+
+    def interleave(row):
+        result = original(row)
+        # This commit occurs after the report read its run but before it reads
+        # events. WAL readers must keep their original snapshot boundary.
+        writer.update_run(run["id"], status="investigating")
+        writer.add_event(run["id"], "source.indexed", {"private": "not for export"})
+        return result
+
+    monkeypatch.setattr(store, "_run", interleave)
+    snapshot = store.report_snapshot(run["id"])
+    assert snapshot["run"]["status"] == "queued"
+    assert [row["kind"] for row in snapshot["events"]] == ["run.created"]
+    assert snapshot["events_truncated"] is False
+    assert writer.get_run(run["id"])["status"] == "investigating"
+    assert len(writer.events(run["id"])) == 3
+
+
+def test_report_snapshot_bounds_events_and_omits_payloads(store):
+    run = make_run(store)
+    with store.transaction() as db:
+        db.executemany("INSERT INTO events(run_id,kind,payload,created_at) VALUES(?,?,?,?)",
+                       [(run["id"], "test.event", '{"secret":"unexported"}', "2026-11-07T00:00:00Z")] * 1001)
+    snapshot = store.report_snapshot(run["id"])
+    assert len(snapshot["events"]) == 1000
+    assert snapshot["events_truncated"] is True
+    assert [event["id"] for event in snapshot["events"]] == list(range(3, 1003))
+    assert all(set(event) == {"id", "kind", "created_at"} for event in snapshot["events"])
+    assert store.report_snapshot("missing") is None
+
+
 def ready(store):
     run = make_run(store)
     patches = [{"path": "source.py", "before": "x=1", "after": "x=2", "reason": "evidence", "evidence_ids": ["e1"]}]

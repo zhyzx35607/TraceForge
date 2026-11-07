@@ -15,6 +15,13 @@ RESPONSE_CHUNK_BYTES = 16_384
 ERROR_METADATA_BYTES = 4_096
 
 
+class _ErrorMetadataTimeout:
+    """Internal marker, never constructed from upstream JSON fields."""
+
+
+ERROR_METADATA_TIMEOUT = _ErrorMetadataTimeout()
+
+
 class ProviderError(RuntimeError):
     def __init__(self, message: str, *, fault_type: str = 'provider'):
         super().__init__(message)
@@ -44,14 +51,17 @@ def error_metadata(data: object) -> dict:
 async def bounded_json_request(client: httpx.AsyncClient, method: str, url: str, *,
                                headers: dict, payload: dict | None, timeout: float,
                                deadline: float, max_bytes: int = MAX_RESPONSE_BYTES,
-                               read_error_metadata: bool = False) -> tuple[int, httpx.Headers, dict | None]:
+                               read_error_metadata: bool = False,
+                               ) -> tuple[int, httpx.Headers, dict | _ErrorMetadataTimeout | None]:
     """Read a successful JSON response under byte and wall-clock ceilings.
 
     Non-success bodies are not consumed unless diagnostics explicitly opts in
     to at most 4 KiB of scalar error metadata. Invalid or unavailable metadata
     must not hide an already received HTTP status. The deadline covers headers,
     every body chunk and normal stream cleanup. Identity encoding avoids
-    decoding an unbounded compressed payload.
+    decoding an unbounded compressed payload. A timed-out error body returns an
+    internal marker alongside its status so diagnostics can end the whole probe
+    budget even if the event loop's timer fires before monotonic time advances.
     """
     request_deadline = min(deadline, time.monotonic() + timeout)
     remaining = request_deadline - time.monotonic()
@@ -95,8 +105,10 @@ async def bounded_json_request(client: httpx.AsyncClient, method: str, url: str,
                 if not isinstance(data, dict):
                     raise ProviderError('模型服务必须返回 JSON 对象', fault_type='format')
                 return status, response_headers, error_metadata(data) if is_error else data
-    except (ProviderError, TimeoutError, httpx.TimeoutException, httpx.TransportError):
+    except (ProviderError, TimeoutError, httpx.TimeoutException, httpx.TransportError) as exc:
         if read_error_metadata and status is not None and not 200 <= status < 300:
+            if isinstance(exc, (TimeoutError, httpx.TimeoutException)):
+                return status, response_headers, ERROR_METADATA_TIMEOUT
             return status, response_headers, None
         raise
 

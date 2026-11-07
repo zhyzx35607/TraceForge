@@ -66,6 +66,7 @@ Replay fixture may only repair the packaged `examples/checkout-service` known fi
 - POST `/api/runs/{id}/approve`: `{decision:"approve"|"reject",patch_digest:string}`; CAS status & digest; queues verification once; response Run. run.state.patch_digest provided by engine.
 - POST `/api/runs/{id}/cancel`: response Run.
 - GET `/api/runs/{id}/artifact`: downloads patch if exists.
+- GET `/api/runs/{id}/report?format=markdown|json`: portable allowlisted snapshot; includes mode limitations, diagnosis, evidence metadata, patch hashes, approval and observed test counts. Reads run/project/latest 1000 event headers in one SQLite read transaction. No source bodies, test stdout/stderr, provider continuation or event payloads. Response is an authenticated attachment with `Cache-Control: no-store`; unknown formats return 422. `content_sha256` hashes canonical JSON excluding that field and is not a signature.
 - GET `/api/metrics`: `{total_runs,completed_runs,verified_fixes,failed_runs,approval_pending,provider_calls,input_tokens,output_tokens}` derived real data.
 - GET `/api/memories?project_id=...`: list memory.
 - GET `/api/evaluation`: saved evaluation report if run, else `{available:false}`.

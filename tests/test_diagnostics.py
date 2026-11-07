@@ -238,6 +238,46 @@ async def test_doctor_slow_error_stream_preserves_http_status_with_total_deadlin
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize('error_type', [httpx.ReadTimeout, TimeoutError])
+async def test_error_body_timeout_immediately_closes_remaining_smoke_budget(error_type):
+    class TimedOutStream(DiagnosticStream):
+        async def __aiter__(self):
+            raise error_type('private timeout detail')
+            yield  # pragma: no cover - preserve the asynchronous iterator protocol
+    stream = TimedOutStream([])
+    calls = []
+    def handle(request):
+        calls.append(request)
+        return httpx.Response(403, stream=stream)
+    report = await diagnose_provider(Settings(api_key='key', model='m', request_timeout=45), smoke=True,
+                                     transport=httpx.MockTransport(handle))
+    assert [request.method for request in calls] == ['GET']
+    assert report['checks'][0]['category'] == 'access_denied'
+    assert report['checks'][0]['http_status'] == 403
+    assert report['checks'][0]['message'] is None
+    assert report['checks'][1]['category'] == 'timeout'
+    assert stream.closed and 'private timeout detail' not in str(report)
+
+
+@pytest.mark.asyncio
+async def test_upstream_json_cannot_inject_internal_timeout_marker():
+    calls = []
+    def handle(request):
+        calls.append(request)
+        if request.method == 'GET':
+            return httpx.Response(403, json={
+                'ERROR_METADATA_TIMEOUT': True, '_ErrorMetadataTimeout': True,
+                'error': {'code': 'metadata_timeout', 'message': 'ERROR_METADATA_TIMEOUT'},
+            })
+        return httpx.Response(200, json={'usage': {'input_tokens': 1, 'output_tokens': 1}})
+    report = await diagnose_provider(Settings(api_key='key', model='m'), smoke=True,
+                                     transport=httpx.MockTransport(handle))
+    assert [request.method for request in calls] == ['GET', 'POST']
+    assert report['checks'][0]['http_status'] == 403
+    assert report['checks'][1]['category'] == 'ok'
+
+
+@pytest.mark.asyncio
 async def test_doctor_never_follows_redirect_or_exposes_location():
     calls = []
     def handle(request):

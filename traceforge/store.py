@@ -205,6 +205,25 @@ class Store:
         with self.connect() as db:
             return self._run(db.execute("SELECT * FROM runs WHERE id=?", (run_id,)).fetchone())
 
+    def report_snapshot(self, run_id: str) -> dict | None:
+        """Read state and its event boundary from one WAL snapshot, without a write lock."""
+        with self.connect() as db:
+            db.execute("BEGIN")
+            try:
+                run = self._run(db.execute("SELECT * FROM runs WHERE id=?", (run_id,)).fetchone())
+                if run is None:
+                    return None
+                project = db.execute("SELECT data FROM projects WHERE id=?", (run["project_id"],)).fetchone()
+                # A portable report never needs arbitrary event payloads or the
+                # entire historical event table in memory. Keep the latest boundary.
+                rows = db.execute("SELECT id,kind,created_at FROM events WHERE run_id=? "
+                                  "ORDER BY id DESC LIMIT 1001", (run_id,)).fetchall()
+                return {"run": run, "project": json.loads(project[0]) if project else {},
+                        "events": [dict(row) for row in reversed(rows[:1000])],
+                        "events_truncated": len(rows) > 1000}
+            finally:
+                db.rollback()
+
     def list_runs(self) -> list[dict]:
         with self.connect() as db:
             return [self._run(row) for row in db.execute("SELECT * FROM runs ORDER BY created_at DESC LIMIT 200")]

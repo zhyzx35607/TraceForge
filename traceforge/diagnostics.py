@@ -11,7 +11,7 @@ from urllib.parse import urlsplit
 import httpx
 
 from .config import Settings
-from .provider import ProviderError, bounded_json_request, error_metadata, usage_counts
+from .provider import ERROR_METADATA_TIMEOUT, ProviderError, bounded_json_request, error_metadata, usage_counts
 from .retrieval import redact
 
 DIAGNOSTIC_RESPONSE_BYTES = 256_000
@@ -82,6 +82,11 @@ async def diagnose_provider(settings: Settings, *, smoke: bool = False,
                     client, method, settings.base_url.rstrip("/") + path, headers=headers, payload=body,
                     timeout=min(settings.request_timeout, 45), deadline=deadline, max_bytes=DIAGNOSTIC_RESPONSE_BYTES,
                     read_error_metadata=True)
+                if data is ERROR_METADATA_TIMEOUT:
+                    # An HTTP error still has a useful status, but a body timeout
+                    # must close the shared budget without consulting timer drift.
+                    deadline = min(deadline, time.monotonic())
+                    data = None
                 # Remove the actual credential before truncating any upstream field.
                 # The request helper returns only allowlisted error metadata on non-2xx.
                 if not 200 <= status < 300:

@@ -16,6 +16,8 @@ TraceForge 的 wheel 包含后端、编译后的网页、固定结算样例和�
 
 该脚本安装并构建前端，用 `uv build` 先生成 sdist，再从 sdist 生成 wheel，然后创建一个新的虚拟环境安装 wheel，运行 `scripts/smoke_release.py`。每次验收环境与报告保存在 `.traceforge/releases/<随机ID>/`，发行文件在 `dist/`。脚本不发布文件、不调用模型，也不会停止已运行的工作台服务。
 
+sdist 同时包含前端源码和 npm 锁文件、Python 锁文件、测试所需公开证据、文档与运行脚本，可用于继续开发和复现；wheel 只携带运行所需资源。生成的发行文件摘要单独保存在源码仓库的 `docs/evidence/release-artifacts.json`，不放入 sdist，以免包的摘要自引用。
+
 如果 `node_modules` 已通过 `npm ci` 安装，可用 `./scripts/release.ps1 -SkipInstall`；这仍会重新构建前端和发布包。
 
 底层构建也可以分别执行：
@@ -63,6 +65,6 @@ macOS/Linux 将上述 Python 路径换成 `.venv/bin/python`。也可使用现�
 python scripts/smoke_release.py --python <已安装wheel的Python路径> --report <报告路径.json>
 ```
 
-脚本从临时空目录使用目标解释器的 `-I` 模式执行，确认实际导入安装包，检查前端静态资源、基准和样例，启动临时 API 完成 replay 调查、摘要绑定审批和真实回归，再执行离线机制评测与一个 Oracle 案例。它校验样例未修改、模型请求为零，并在结束时关闭自己启动的服务。
+脚本从临时空目录使用目标解释器的 `-I` 模式执行，确认实际导入安装包，检查前端静态资源、基准和样例，启动临时 API 完成 replay 调查、摘要绑定审批和真实回归，下载两种调查报告并独立复算 JSON 摘要，再执行离线机制评测与一个 Oracle 案例。它校验样例未修改、模型请求为零，并在结束时关闭自己启动的服务。
 
 这项验收证明安装包与验证链路可用；replay 和 Oracle 仍不代表模型修复准确率。真实模型配置与尚未完成的验收见 [验收记录](acceptance.md)。

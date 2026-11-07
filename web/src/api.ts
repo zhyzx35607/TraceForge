@@ -38,3 +38,50 @@ export async function downloadArtifact(id: string) {
   link.href = url; link.download = `traceforge-${id}.patch`; link.click()
   window.setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
+
+export type ReportFormat = 'markdown' | 'json'
+
+export async function downloadReport(id: string, format: ReportFormat, signal: AbortSignal) {
+  const controller = new AbortController()
+  const abort = () => controller.abort()
+  signal.addEventListener('abort', abort, { once: true })
+  if (signal.aborted) controller.abort()
+  const timeout = window.setTimeout(abort, 15000)
+  try {
+    const token = sessionStorage.getItem(TOKEN_KEY)
+    const response = await fetch(`/api/runs/${encodeURIComponent(id)}/report?format=${format}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {}, signal: controller.signal,
+    })
+    if (!response.ok) {
+      const data = await response.json().catch(() => null)
+      const detail = typeof data?.detail === 'string' ? data.detail : `报告下载失败（HTTP ${response.status}）`
+      throw new Error(response.status === 401 ? '访问凭证无效或缺失，请在连接设置中填写 API Token。' : detail)
+    }
+    const contentType = response.headers.get('Content-Type')?.split(';')[0].trim()
+    if (contentType !== (format === 'json' ? 'application/json' : 'text/markdown')) {
+      throw new Error('服务没有返回预期格式的报告，请确认后端已更新并重试。')
+    }
+    const blob = await response.blob()
+    if (controller.signal.aborted) throw new DOMException('Download aborted', 'AbortError')
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    try {
+      link.href = url
+      link.download = `traceforge-${id}-report.${format === 'json' ? 'json' : 'md'}`
+      document.body.append(link)
+      link.click()
+    } finally {
+      link.remove()
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000)
+    }
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError' && !signal.aborted) {
+      throw new Error('报告下载超时，请检查后端服务并重试。')
+    }
+    if (error instanceof TypeError) throw new Error('无法下载报告，请检查后端连接并重试。')
+    throw error
+  } finally {
+    window.clearTimeout(timeout)
+    signal.removeEventListener('abort', abort)
+  }
+}

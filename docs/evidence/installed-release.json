@@ -1,7 +1,7 @@
 {
   "kind": "installed-wheel-offline-acceptance",
   "status": "passed",
-  "checked_at": "2026-11-07T03:26:48.353290+00:00",
+  "checked_at": "2026-11-07T03:49:58.844570+00:00",
   "model_capability": "not_measured",
   "limitations": [
     "Replay and oracle only; this does not measure model repair ability or Docker isolation."
@@ -32,10 +32,10 @@
     "canaries_valid": true,
     "missing_resources": [],
     "resource_files": 81,
-    "resource_sha256": "f3d1b9cc760fbb1d55cbc23acbb1a2488b851c55d81bd5c3409c1851771216c1"
+    "resource_sha256": "92afd0b8ceadfb1a22b3ef349be60bfd37aae1d0d0155333f3507e1817f8f13d"
   },
   "api": {
-    "run_id": "135224c883c74372885f2000b282d3ba",
+    "run_id": "0f1227cfbf43476ebdce3f48c50b7227",
     "mode": "replay",
     "status": "completed",
     "approval_digest": "94c8493118bc4355a64156ee4904fae7faf51bad2002ad60a2120949fdaffa80",
@@ -101,16 +101,22 @@
     "provider_calls": 0,
     "assets": [
       {
-        "path": "/assets/index-CYkCgaPj.js",
-        "bytes": 312475,
-        "sha256": "7ea9608497dcb243f47f065a783de2e95ed999308efccc5899416d604b449ba7"
+        "path": "/assets/index-BJVm6ECM.js",
+        "bytes": 315978,
+        "sha256": "c00cff1562d447e315eebe0a09206a6c669d7369f293b68a108db54b574e5f39"
       },
       {
-        "path": "/assets/index-Cl2TkGci.css",
-        "bytes": 74031,
-        "sha256": "d9f142983f4dce8332636f7b43c547fee361931e20d8cd1234dd100f7fc01b0f"
+        "path": "/assets/index-Bnt15YJz.css",
+        "bytes": 75358,
+        "sha256": "e4e16b23c1ae88322cf4bf17db8f6f85d188243c7ce37878014db907067f3cf9"
       }
-    ]
+    ],
+    "report_export": {
+      "json": true,
+      "markdown": true,
+      "content_sha256": "3676cc03bdaf4891b3221b2c4b970ff8c0a0590ffd397961834dfb80dec1f3ca",
+      "digest_verified": true
+    }
   },
   "evaluation": {
     "kind": "offline-harness",
@@ -158,5 +164,5 @@
     }
   },
   "resources_unchanged": true,
-  "duration_ms": 17469
+  "duration_ms": 16375
 }

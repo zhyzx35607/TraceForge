@@ -6,13 +6,13 @@
 
 | 检查 | 实际结果 | 原始记录或复现入口 |
 | --- | --- | --- |
-| 完整后端测试 | **235 passed, 3 skipped**，63.89s；3 项因本机 symlink 创建权限跳过；实际 Windows junction 测试通过 | 本机 `.traceforge/acceptance/pytest-release.txt`；`python -m pytest -q` |
+| 完整后端测试 | **274 passed, 3 skipped**，86.69s；3 项因本机 symlink 创建权限跳过；实际 Windows junction 测试通过 | 本机 `.traceforge/acceptance/pytest-reports-final.txt`；`python -m pytest -q` |
 | Ruff | `All checks passed!` | `python -m ruff check traceforge tests` |
 | 锁定安装 | `uv sync --extra dev --locked` 成功 | `uv.lock`；跨磁盘安装使用 copy 回退，仅性能提示 |
-| 前端类型检查与构建 | 成功，1585 modules；JS gzip 94.56KB | `npm run build`；不等同于浏览器性能评分 |
+| 前端类型检查与构建 | 成功，1587 modules；JS gzip 95.43KB | `npm run build`；不等同于浏览器性能评分 |
 | wheel / sdist 内容 | 前端、结算样例、十个基准共 81 个资源；与源码逐文件 SHA256 一致 | `uv build`；已独立只读核查产物 |
-| wheel 独立安装 | 空工作目录、独立 venv、Python `-I`；实际 HTML/JS/CSS 可用；摘要审批后 8 项中 4 失败 → 8 项全通过；安装资源不变；evaluate 10/10，unit_conversion oracle 1/1 | [可携带报告](evidence/installed-release.json)；本机 `.traceforge/release-acceptance/report.json`；17.469s，0 模型调用 |
-| 一键发布脚本 | `scripts/release.ps1 -SkipInstall` 实跑成功；重新构建前端/sdist/wheel、新建 venv、安装与完整 smoke，后者 12.516s | 本机 `.traceforge/releases/40a8c701d8c34116a7eaa795015a41df/report.json` |
+| wheel 独立安装 | 空工作目录、独立 venv、Python `-I`；实际 HTML/JS/CSS 可用；摘要审批后 8 项中 4 失败 → 8 项全通过；两种报告导出与摘要复算通过；安装资源不变；evaluate 10/10，unit_conversion oracle 1/1 | [可携带报告](evidence/installed-release.json)；本机 `.traceforge/releases/5cb09905cf7b461397a65085ebba8f6e/report.json`；16.375s，0 模型调用 |
+| 一键发布与源码包复现 | `scripts/release.ps1 -SkipInstall` 实跑成功；98 个 wheel 包文件与当前源码一致；sdist 含前端源码/锁文件/文档/测试输入；解压后从解压源码导入，报告与路径测试 **42 passed** | 本机 `.traceforge/releases/5cb09905cf7b461397a65085ebba8f6e/`；[文件摘要](evidence/release-artifacts.json) |
 | 离线机制评测 | **10/10** | [可携带报告](evidence/offline-evaluation.json)，`traceforge evaluate` |
 | 多故障 Oracle | 修复 **7/7**，拒答 **3/3**，安全 **2/2**，初始检索路径覆盖 **10/10** | [可携带报告](evidence/oracle-benchmark.json)，session `20261107T024936Z-b0e64e03` |
 | 模型功能正确率 | **未测，0/0**；Oracle provider calls=0、tokens=0 | 与上一行完全不同的分母 |
@@ -21,6 +21,7 @@
 | 现有项目接入 | `report-workbench-agent` 27 个范围内文件，收集 10 条证据；文件 manifest 与 Git 状态均不变；0 模型调用 | [摘要](evidence/existing-repository.json)；只读 investigate，不声称根因确认 |
 | 最终服务 API smoke | run `6e49d2836f4a478fbbdfbfe8cf4c6b8f` 完成；修复前后观察报告完整、source=`external_observer` | 本机 `.traceforge/acceptance/api-smoke.json` |
 | 浏览器 | 审批、验证、记忆、运行对比、Benchmark 案例及筛选可操作；390px 无横向溢出；最终浏览器 warn/error 为空 | 本机 `.traceforge/screenshots/`；下方代表性截图 |
+| 调查报告导出 | 浏览器实际下载 Markdown 与 JSON；摘要独立复算一致；明确 replay、0 模型请求与 4 失败 → 8 通过；390px 无溢出 | [下载验收](evidence/report-download.json)、[报告样例](evidence/sample-run-report.md)、[JSON 样例](evidence/sample-run-report.json) |
 | GitHub CI | 已写工作流，**未推送，未运行云端 CI** | `.github/workflows/ci.yml` |
 
 TestClient 的完整测试输出有一条 Starlette/httpx 弃用提示，不影响当前通过结果；后续升级依赖时应处理，不能将它隐藏为零 warning。
@@ -37,6 +38,8 @@ TestClient 的完整测试输出有一条 Starlette/httpx 弃用提示，不影�
 | `.git` 文本、`commondir`、`alternates` 指向外部历史 | 三种均真实复现；调用 Git 前检查独立元数据布局，默认跳过共享或外指结构 |
 | 慢速分块响应突破单次读超时，完整读入后才判大小 | 整体 deadline + 分块上限 + 流关闭；超长和 slow-drip MockTransport 回归通过 |
 | doctor 不读取错误正文导致并发限制只能显示普通 429 | 诊断显式读取最多 4KiB，仅保留标量 code/type/message，实际 Key 先脱敏再截断；HTML、超长、压缩和慢流仍保留 HTTP 状态；生产推理默认不读取错误正文 |
+| doctor 错误正文读超时后仍继续下一次请求 | 内部对象传递超时并关闭共享预算；保留 HTTP 状态，上游 JSON 无法伪造标记；10 轮共 40 次定向执行全部通过 |
+| 报告可能带出内部状态、把旧日志当验证结果或在 Markdown 中产生主动链接 | 白名单快照、不含源码/命令/原始日志；重新校验观察器与审批；Markdown 转义；独立审查使用真实解析器验证 9 类输入 |
 | 单独安装 wheel 缺少网页/样例/基准，并把状态放到安装目录 | 发行构建包含固定资源，运行状态使用用户数据目录；缺失前端构建时发行失败；独立安装完整演示实测通过 |
 | IPv6 Host 与非 ASCII Authorization | 合法 `[::1]` 接受；非法 Origin 与 Token 返回受控错误，不能触发 500 |
 
