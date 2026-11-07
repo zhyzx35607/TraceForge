@@ -1,0 +1,193 @@
+{
+  "kind": "live-docker-acceptance",
+  "checked_at": "2026-11-07T05:32:49.815624+00:00",
+  "run_id": "4d93c3db9ae84f46819c13674dfa3af2",
+  "mode": "live",
+  "model": "deepseek-v4.1-flash",
+  "api_style": "chat",
+  "status": "passed",
+  "approval_actor": "acceptance harness under user authorization",
+  "input_scope": "packaged synthetic checkout fixture only",
+  "awaiting_approval_observed": true,
+  "patch_digest": "92459c7bfa5ccd35749699052bb8f56e1416d214f8c0fefe8e3d8140b40622df",
+  "source_unchanged": true,
+  "report_provenance": {
+    "manifests_match": true,
+    "investigation_manifest_sha256": "42951b3dcc2cffd2e527c379b30b9a119c5140be54efbe67fc5636d961249d2d",
+    "verification_manifest_sha256": "42951b3dcc2cffd2e527c379b30b9a119c5140be54efbe67fc5636d961249d2d",
+    "investigation_file_count": 3,
+    "verification_file_count": 3,
+    "repository_evidence_matches": true,
+    "citations_valid": true,
+    "patch_targets_cited": true
+  },
+  "usage": {
+    "input_tokens": 11965,
+    "output_tokens": 1404,
+    "provider_calls": 3
+  },
+  "final_status": "completed",
+  "duration_ms": 47406,
+  "events": [
+    {
+      "kind": "run.created",
+      "created_at": "2026-11-07T05:32:49.808111+00:00"
+    },
+    {
+      "kind": "run.status",
+      "created_at": "2026-11-07T05:32:49.823628+00:00"
+    },
+    {
+      "kind": "retrieval.indexed",
+      "created_at": "2026-11-07T05:32:49.859681+00:00"
+    },
+    {
+      "kind": "specialist.started",
+      "created_at": "2026-11-07T05:32:49.878713+00:00"
+    },
+    {
+      "kind": "specialist.started",
+      "created_at": "2026-11-07T05:32:49.886052+00:00"
+    },
+    {
+      "kind": "specialist.started",
+      "created_at": "2026-11-07T05:32:49.892053+00:00"
+    },
+    {
+      "kind": "specialist.completed",
+      "created_at": "2026-11-07T05:32:49.910051+00:00"
+    },
+    {
+      "kind": "specialist.completed",
+      "created_at": "2026-11-07T05:32:49.918050+00:00"
+    },
+    {
+      "kind": "specialist.completed",
+      "created_at": "2026-11-07T05:32:49.927052+00:00"
+    },
+    {
+      "kind": "runtime.checkpoint",
+      "created_at": "2026-11-07T05:32:49.944080+00:00"
+    },
+    {
+      "kind": "runtime.checkpoint",
+      "created_at": "2026-11-07T05:32:49.972244+00:00"
+    },
+    {
+      "kind": "provider.attempt",
+      "created_at": "2026-11-07T05:32:50.267009+00:00"
+    },
+    {
+      "kind": "provider.usage",
+      "created_at": "2026-11-07T05:32:53.099588+00:00"
+    },
+    {
+      "kind": "tool.called",
+      "created_at": "2026-11-07T05:32:53.126571+00:00"
+    },
+    {
+      "kind": "tool.result",
+      "created_at": "2026-11-07T05:32:53.141620+00:00"
+    },
+    {
+      "kind": "tool.called",
+      "created_at": "2026-11-07T05:32:53.150133+00:00"
+    },
+    {
+      "kind": "tool.result",
+      "created_at": "2026-11-07T05:32:53.167548+00:00"
+    },
+    {
+      "kind": "runtime.checkpoint",
+      "created_at": "2026-11-07T05:32:53.198883+00:00"
+    },
+    {
+      "kind": "runtime.checkpoint",
+      "created_at": "2026-11-07T05:32:53.233436+00:00"
+    },
+    {
+      "kind": "provider.attempt",
+      "created_at": "2026-11-07T05:32:53.660663+00:00"
+    },
+    {
+      "kind": "provider.usage",
+      "created_at": "2026-11-07T05:32:55.865040+00:00"
+    },
+    {
+      "kind": "tool.called",
+      "created_at": "2026-11-07T05:32:55.896049+00:00"
+    },
+    {
+      "kind": "tool.result",
+      "created_at": "2026-11-07T05:32:55.906565+00:00"
+    },
+    {
+      "kind": "runtime.checkpoint",
+      "created_at": "2026-11-07T05:32:55.947110+00:00"
+    },
+    {
+      "kind": "runtime.checkpoint",
+      "created_at": "2026-11-07T05:32:55.977626+00:00"
+    },
+    {
+      "kind": "provider.attempt",
+      "created_at": "2026-11-07T05:32:56.322040+00:00"
+    },
+    {
+      "kind": "provider.usage",
+      "created_at": "2026-11-07T05:33:03.371581+00:00"
+    },
+    {
+      "kind": "tool.called",
+      "created_at": "2026-11-07T05:33:03.397100+00:00"
+    },
+    {
+      "kind": "runtime.checkpoint",
+      "created_at": "2026-11-07T05:33:03.421958+00:00"
+    },
+    {
+      "kind": "diagnosis.ready",
+      "created_at": "2026-11-07T05:33:03.439158+00:00"
+    },
+    {
+      "kind": "run.status",
+      "created_at": "2026-11-07T05:33:03.452160+00:00"
+    },
+    {
+      "kind": "approval.decided",
+      "created_at": "2026-11-07T05:33:03.463764+00:00"
+    },
+    {
+      "kind": "run.status",
+      "created_at": "2026-11-07T05:33:03.463764+00:00"
+    },
+    {
+      "kind": "runtime.checkpoint",
+      "created_at": "2026-11-07T05:33:03.490818+00:00"
+    },
+    {
+      "kind": "verification.started",
+      "created_at": "2026-11-07T05:33:04.755724+00:00"
+    },
+    {
+      "kind": "verification.result",
+      "created_at": "2026-11-07T05:33:33.054539+00:00"
+    },
+    {
+      "kind": "verification.started",
+      "created_at": "2026-11-07T05:33:33.089673+00:00"
+    },
+    {
+      "kind": "verification.result",
+      "created_at": "2026-11-07T05:33:37.116396+00:00"
+    },
+    {
+      "kind": "verification.completed",
+      "created_at": "2026-11-07T05:33:37.154387+00:00"
+    },
+    {
+      "kind": "run.status",
+      "created_at": "2026-11-07T05:33:37.154387+00:00"
+    }
+  ]
+}

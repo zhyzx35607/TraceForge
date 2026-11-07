@@ -1,21 +1,22 @@
 # TraceForge 本次验收记录
 
-截至 **2026-11-07（Asia/Shanghai）**，本机工作流、隔离验证、持久恢复和前端已经完成实测；**真实模型成功修复仍未验收通过**，原因是已配置服务的生成请求返回 403、429 或超时。此项与离线机制成绩分开记录。
+截至 **2026-11-07（Asia/Shanghai）**，本机工作流、隔离验证、持久恢复和前端已经完成实测；切换至用户指定的本地网关后，**`deepseek-v4.1-flash` 真实模型修复已验收通过**。完整十案例基准和浏览器流程见 [真实模型验收](live-validation.md)，旧网关失败保留为历史记录。
 
 环境：Windows 10、Python 3.12.10、Node 22、Docker daemon 29.6.2、`python:3.12-slim`。下面为执行结果，不能解释为其他操作系统、生产负载或企业使用效果。
 
 | 检查 | 实际结果 | 原始记录或复现入口 |
 | --- | --- | --- |
-| 完整后端测试 | **455 passed, 3 skipped**，292.88s；3 项因本机 symlink 创建权限跳过；实际 Windows junction 测试通过 | 本机 `.traceforge/acceptance/pytest-boundaries-final.txt`；`python -m pytest -q -ra` |
+| 完整后端测试 | **461 passed, 3 skipped**，239.16s；3 项因本机 symlink 创建权限跳过；实际 Windows junction 测试通过 | 本机 `.traceforge/acceptance/pytest-live-final.txt`；`python -m pytest -q -ra` |
 | Ruff | `All checks passed!` | `python -m ruff check traceforge tests` |
 | 锁定安装 | `uv sync --extra dev --locked` 成功 | `uv.lock`；跨磁盘安装使用 copy 回退，仅性能提示 |
-| 前端类型检查与构建 | 成功，1589 modules；JS gzip 99.43KB | `npm run build`；不等同于浏览器性能评分 |
+| 前端类型检查与构建 | 成功，1589 modules；JS gzip 99.65KB | `npm run build`；不等同于浏览器性能评分 |
 | wheel / sdist 内容 | 前端、结算样例、十个基准共 81 个资源；与源码逐文件 SHA256 一致 | `uv build`；已独立只读核查产物 |
-| wheel 独立安装 | 空工作目录、独立 venv、Python `-I`；实际 HTML/JS/CSS 可用；同源审批后 8 项中 4 失败 → 8 项全通过；跨源请求被拒；两种报告与来源核验通过；安装资源不变；evaluate 10/10、四路检索消融、unit_conversion oracle 1/1 | [可携带报告](evidence/installed-release.json)；本机 `.traceforge/releases/3cad3f59aff8473ba0301439c57d35e3/report.json`；26.125s，0 模型调用 |
-| 一键发布与源码包复现 | Windows PowerShell 5.1 中 `scripts/release.ps1 -SkipInstall` 实跑成功；应用文件与所验收安装包逐文件一致；sdist 含前端源码/锁文件/文档/测试输入 | 本机 `.traceforge/releases/3cad3f59aff8473ba0301439c57d35e3/`；逐文件数量与最终发行摘要见[构建证据](evidence/release-artifacts.json) |
+| wheel 独立安装 | 空工作目录、独立 venv、Python `-I`；实际 HTML/JS/CSS 可用；同源审批后 8 项中 4 失败 → 8 项全通过；跨源请求被拒；两种报告与来源核验通过；安装资源不变；evaluate 10/10、四路检索消融、unit_conversion oracle 1/1 | [可携带报告](evidence/installed-release.json)；本机 `.traceforge/releases/7b2839ee56344835aa0d730da1bc271e/report.json`；37.562s，0 模型调用 |
+| 一键发布与源码包复现 | Windows PowerShell 5.1 中 `scripts/release.ps1 -SkipInstall` 实跑成功；应用文件与所验收安装包逐文件一致；sdist 含前端源码/锁文件/文档/测试输入 | 本机 `.traceforge/releases/7b2839ee56344835aa0d730da1bc271e/`；逐文件数量与最终发行摘要见[构建证据](evidence/release-artifacts.json) |
 | 离线机制评测 | **10/10** | [可携带报告](evidence/offline-evaluation.json)，`traceforge evaluate` |
 | 多故障 Oracle | 修复 **7/7**，拒答 **3/3**，安全 **2/2**，初始检索路径覆盖 **10/10**（仅为小工作区烟雾指标，不能代表排序质量） | [可携带报告](evidence/oracle-benchmark.json)，session `20261107T051326Z-457b7803` |
-| 模型功能正确率 | **未测，0/0**；Oracle provider calls=0、tokens=0 | 与上一行完全不同的分母 |
+| 真实模型十案例基准 | `deepseek-v4.1-flash`，修复 **7/7**、拒答 **3/3**、安全 **2/2**；25 次请求，输入 74,495 / 输出 16,622 tokens，270.859s；每案例一次，公开与隐藏测试均在 Docker 执行 | [可携带报告](evidence/live-benchmark.json)，session `20261107T053443Z-b8fa43c1`；合成小样本，不代表生产准确率 |
+| 真实模型浏览器全流程 | 页面注册 Docker 项目、创建 live 调查、审阅并批准摘要、4 项失败 → 8 项全过、下载 JSON 并复算摘要；2 次请求，6,612 tokens，390px 无页面横溢，console warn/error 为空 | [浏览器记录](evidence/live-browser.json)、[live 报告](evidence/live-run-report.md) |
 | 真实 Docker 验证 | baseline exit 1，8 项中 4 失败；patched exit 0，8 项全过；两侧 `external_observer` 完整，导出报告来源核验通过；源 SHA 不变，24.110s | [摘要](evidence/docker-validation.json)；本机 `.traceforge/docker-boundary-validation-96ffd25ec021449a90479926beea9fa9/report.json`，run `d15e9f0ed7894268b2057364ddd6546d` |
 | 真正的服务进程重启 | 终止并重启 API，待审批记录与摘要保留；随后批准、执行并通过原测试 | `tests/test_process_recovery.py`，包含在完整测试中 |
 | 现有项目接入 | `report-workbench-agent` 27 个范围内文件，收集 10 条证据；文件 manifest 与 Git 状态均不变；0 模型调用 | [摘要](evidence/existing-repository.json)；只读 investigate，不声称根因确认 |
@@ -25,6 +26,7 @@
 | 检索消融与界面 | 10 个问题、33 个公开文件；RRF Recall@8=1.00、BM25=0.95，MRR 则 BM25 更高；实际展开逐题排名，390px 无页面横溢，浏览器 warn/error 为空 | [原始评测](evidence/retrieval-ablation.json)、[浏览器验收](evidence/retrieval-browser.json)、[口径与限制](retrieval-evaluation.md) |
 | 本机并发一致性 | 12 条合成任务：6 批准、3 拒绝、3 取消；重复审批恰好一次生效；18 作业全部完成、最多尝试 1 次、两个 worker 的验证区间实际重叠；6 条记忆无重复，0 模型请求，18.047s | [完整报告](evidence/local-concurrency.json)、[复现与限制](local-concurrency.md)；239 个 HTTP 响应的 p95 为 375ms，仅这一轮本机小样本 |
 | GitHub CI | 已写工作流，**未推送，未运行云端 CI** | `.github/workflows/ci.yml` |
+| 模型启动脚本 | Windows PowerShell 5.1 下使用非敏感占位凭据继承进程环境，启动独立目录、读取网页与模型配置成功；0 调查、0 模型请求；交互式隐藏输入分支未人工验收 | [启动验收](evidence/live-launcher.json)、`scripts/start-live.ps1` |
 
 TestClient 的完整测试输出有一条 Starlette/httpx 弃用提示，不影响当前通过结果；后续升级依赖时应处理，不能将它隐藏为零 warning。
 
@@ -55,11 +57,13 @@ TestClient 的完整测试输出有一条 Starlette/httpx 弃用提示，不影�
 
 ## 真实模型路径的准确状态
 
-已实现 Chat Completions / Responses、严格工具定义、工具参数与可见证据门禁、实际 usage、重试预算、上下文压缩和恢复。协议与异常分支有自动测试；这些不能替代真实服务端到端验收。
+已实现 Chat Completions / Responses、严格工具定义、工具参数与可见证据门禁、实际 usage、重试预算、上下文压缩和恢复。**13:32–13:41（上海）**使用新本地网关完成最小生成、Engine 全链路、单案例预检、十案例基准和浏览器审批验证，协议为 Chat Completions；没有更换指定模型，也没有用 Oracle 补足失败。具体记录见 [live-validation.md](live-validation.md)。恢复时模型、协议或接口变化会拒绝继续旧调查，凭据轮换仍允许；新增 4 条恢复测试通过。
+
+以下为切换网关前的历史记录，不能用于描述新网关的当前状态：
 
 本次请求只包含内置合成样例或“回复 OK”，没有发送用户私有仓库内容。2026-11-07 10:45（上海）`gpt-6-sol` 的 `/models` 为 200，最小 Responses 生成为 403。10:52–10:53 又分别检查 `gpt-6-sol` Chat 和 `gpt-6.1-sol` Responses：模型列表仍为 200，最小生成超时。之前真实 Engine 调用也记录过 403/429。密钥未写入版本化文件。
 
-因此本版不宣称已有成功的 live 修复，不给模型准确率。下一项验收是：使用当前账号下可成功生成且支持 Function Calling 的服务，先完成一个合成样例的 **live 调查 → 人工审批 → Docker 回归**，再运行固定 live 基准。保持相同案例与分母，记录失败、Token 和时间；不要换成 Oracle 填补。
+截至当时，成功 live 修复仍未验收。随后按相同案例与分母使用新网关完成验收，结果在上方单独列出，旧服务访问失败没有被删除或改写为推理成功。
 
 完整 Engine 调查也在其余代理停止后执行过（`gpt-6.1-sol` Responses，180 秒总预算、140 秒单次请求上限）。run `cf51fc1170354f1b9a05d033ef2bd2a5` 在首次调用返回 HTTP 403，未进入审批或执行；记录 1 次真实请求，提供方未返回 token usage。原始报告位于本机 `.traceforge/live-validation-final/report.json`。这是服务访问失败，不能归因为模型修复推理失败，也不能算通过。
 

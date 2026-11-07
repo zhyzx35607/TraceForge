@@ -1,0 +1,59 @@
+{
+  "configured": true,
+  "model": "deepseek-v4.1-flash",
+  "api_style": "chat",
+  "host": "127.0.0.1",
+  "checked_at": "2026-11-07T05:32:47.638473+00:00",
+  "checks": [
+    {
+      "name": "models",
+      "ok": true,
+      "http_status": 200,
+      "category": "ok",
+      "code": null,
+      "upstream_type": null,
+      "message": null,
+      "action": "接口已响应；模型列表存在不代表工具调用一定可用。",
+      "listed_models": [
+        "hy4-preview-f",
+        "hy3",
+        "deepseek-v4.1-flash",
+        "glm-5.3",
+        "glm-5.3-flash",
+        "glm-5.2",
+        "glm-5.1",
+        "glm-5v-turbo",
+        "minimax-m3",
+        "kimi-k3-1",
+        "kimi-k2.8-preview",
+        "kimi-k2.7",
+        "kimi-k2.6",
+        "deepseek-v4-pro",
+        "hy4free",
+        "hy4std",
+        "space-bunny",
+        "minimax-m3.1-flash",
+        "kimi-k3.1-pro",
+        "step-5-preview",
+        "mimo-v2.6-pro"
+      ],
+      "selected_model_listed": true,
+      "latency_ms": 281
+    },
+    {
+      "name": "minimal_generation",
+      "ok": true,
+      "http_status": 200,
+      "category": "ok",
+      "code": null,
+      "upstream_type": null,
+      "message": null,
+      "action": "最小生成请求成功；此检查没有验证 Function Calling 或修复效果。",
+      "usage": {
+        "input_tokens": 43,
+        "output_tokens": 15
+      },
+      "latency_ms": 1250
+    }
+  ]
+}

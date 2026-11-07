@@ -8,6 +8,8 @@ Markdown 适合现场讲解或事故复盘，JSON 适合检查摘要与自动归
 
 新增来源核验后的 HTTP 验收样例见 [当前 Markdown](evidence/current-run-report.md) 和 [当前 JSON](evidence/current-run-report.json)，包含 `verification.provenance`；对应的[接口验收记录](evidence/api-smoke-final.json)保存了复算结果。
 
+真实模型的浏览器下载样例见 [live Markdown](evidence/live-run-report.md) 和 [live JSON](evidence/live-run-report.json)。新增 `provider.requested_model` 与 `api_style` 取自调查时保存的配置，不从当前服务配置反推历史，也不证明网关实际使用的底层模型。Markdown 分开列出诊断阶段的原始限制与后续验证限制，避免把“当时尚未测试”误读为当前执行状态。
+
 ![实际报告下载与回归结果](screenshots/report-export.png)
 
 ## 包含哪些信息

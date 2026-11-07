@@ -1,0 +1,16 @@
+{
+  "kind": "live-launcher-acceptance",
+  "status": "passed",
+  "provider_calls": 0,
+  "powershell": "Windows PowerShell 5.1",
+  "provider": {
+    "configured": true,
+    "model": "deepseek-v4.1-flash",
+    "api_style": "chat"
+  },
+  "frontend_status": 200,
+  "isolated_data_dir": true,
+  "key_source": "inherited process environment",
+  "interactive_hidden_input_tested": false,
+  "credential_test_value": "non-secret placeholder; no model generation"
+}

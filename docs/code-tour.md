@@ -105,7 +105,7 @@ flowchart TD
 
 [API approve](../traceforge/api.py#L291) 将决定和摘要交给 [Store.decide](../traceforge/store.py#L264)。后者在同一事务里检查当前状态、保存摘要和重新计算的摘要，再写批准记录、状态事件以及唯一的 `verify` 作业。过期内容和重复批准返回冲突。
 
-[Engine.verify](../traceforge/engine.py#L534) 不盲信“队列里有 verify”。它重新检查 `verifying` 状态、持久化的批准决定、补丁摘要、引用和版本，把调查清单通过 `_expected_manifest` 传给 runner。这种重复检查保护的是恢复和内部调用路径；绕过 HTTP 接口也不能自动获得执行资格。
+[Engine.verify](../traceforge/engine.py#L543) 不盲信“队列里有 verify”。它重新检查 `verifying` 状态、持久化的批准决定、补丁摘要、引用和版本，把调查清单通过 `_expected_manifest` 传给 runner。这种重复检查保护的是恢复和内部调用路径；绕过 HTTP 接口也不能自动获得执行资格。
 
 **两份代码都跑了测试，还需要证明跑的是正确的两份代码。**
 
@@ -131,7 +131,7 @@ Docker 参数由 [_docker_command](../traceforge/runner.py#L211) 构建，限制
 
 [build_report](../traceforge/reports.py#L296) 使用白名单组织可携带内容；[_verified](../traceforge/reports.py#L238) 重新核对审批、观察报告与回归条件，[_persisted_provenance](../traceforge/reports.py#L172) 进一步核对持久化的调查／验证清单、证据和引用。旧记录缺失必要字段时，报告会说明无法确认，不能直接照抄历史 `regression_fixed=true`。
 
-导出报告含证据索引、版本摘要、补丁内容哈希与结果，不含源码正文、补丁原文、测试原始输出或 provider 续接消息。[render_markdown](../traceforge/reports.py#L381) 负责可阅读表示。`content_sha256` 校验的是规定格式的 JSON 内容，既不是 Markdown 文件哈希，也不是签名或第三方背书。导出只读取持久记录，不会因为用户后来编辑了工作区就重新运行调查。
+导出报告含证据索引、版本摘要、补丁内容哈希与结果，不含源码正文、补丁原文、测试原始输出或 provider 续接消息。[render_markdown](../traceforge/reports.py#L385) 负责可阅读表示。`content_sha256` 校验的是规定格式的 JSON 内容，既不是 Markdown 文件哈希，也不是签名或第三方背书。导出只读取持久记录，不会因为用户后来编辑了工作区就重新运行调查。
 
 下面三个练习直接使用仓库已有测试。先按 README 安装开发依赖，在仓库根目录执行；命令是练习入口，本文不预填通过数量。它们使用临时目录、可信合成代码或替身 provider，不需要真实模型账号。若要改输入，只在自己的练习分支改下面指定的测试值，保留断言并先预测结果；不要修改内置回放夹具或削弱执行门禁。
 
@@ -149,7 +149,7 @@ API 用例先人为准备待审批状态，再依次提交错误摘要、正确�
 
 **练习二：文件已恢复原样，为什么调查仍然失败。**
 
-阅读 [test_transient_repository_revision_never_reaches_model](../tests/test_engine.py#L429)，再运行：
+阅读 [test_transient_repository_revision_never_reaches_model](../tests/test_engine.py#L471)，再运行：
 
 ```powershell
 .venv\Scripts\python.exe -m pytest -vv tests/test_engine.py::test_transient_repository_revision_never_reaches_model
@@ -173,4 +173,4 @@ API 用例先人为准备待审批状态，再依次提交错误摘要、正确�
 
 读懂这些练习后，再决定要改哪一层：调整证据排序去 `retrieval.py`；新增模型工具要同时改 provider 的工具 schema、Engine 分派与验证；调整批准语义先看 Store 事务；扩展测试框架要提供可靠的观察报告；增加报告字段要决定是否可携带、是否需要脱敏以及旧记录怎样解释。每次改动先明确哪条现有保证可能失效，再挑对应回归用例，而不是只看页面能否显示。
 
-目前项目只有一个推理 Agent，取证并发不是多 Agent；真实服务的成功 live 修复仍需按 [验收记录](acceptance.md) 单独完成。Oracle 和 replay 能演示确定性工作流，替身 provider 能测试协议分支，它们都不能替代真实模型效果。内置案例与隐藏断言也不代表生产用户、跨仓库修复率或业务收益。讲述时把结论停在自己能打开源码、解释条件并复现的范围内。
+目前项目只有一个推理 Agent，取证并发不是多 Agent；已完成的真实模型修复与十案例基准见 [验收记录](acceptance.md)。新调查在 `_live` 中保存请求模型、协议与接口摘要，恢复时配置改变会阻止续接旧工具历史，密钥轮换不受影响；报告仅导出模型和协议。Oracle、replay 和替身 provider 的结果仍与 live 分开。内置案例与隐藏断言也不代表生产用户、跨仓库修复率或业务收益。讲述时把结论停在自己能打开源码、解释条件并复现的范围内。

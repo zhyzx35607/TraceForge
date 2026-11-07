@@ -15,6 +15,7 @@ const duration = (run?: Run) => {
 }
 const rows: { label: string; sublabel?: string; get: (run: Run) => string }[] = [
   { label: '调查模式', get: run => modes[run.mode] },
+  { label: '请求模型', sublabel: '调查时保存的配置', get: run => run.mode === 'live' ? run.state.provider_identity?.model || '未记录' : '未调用模型' },
   { label: '运行状态', get: run => statuses[run.status] || run.status },
   { label: '输入 Tokens', get: run => formatNumber(run.state.usage?.input_tokens) },
   { label: '输出 Tokens', get: run => formatNumber(run.state.usage?.output_tokens) },

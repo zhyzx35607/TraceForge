@@ -1,0 +1,40 @@
+{
+  "kind": "live-browser-acceptance",
+  "checked_at": "2026-11-07T05:43:43.313477+00:00",
+  "run_id": "afd5b4a1209b467f9909faf1cbe2b9d2",
+  "mode": "live",
+  "model": "deepseek-v4.1-flash",
+  "actions": [
+    "register Docker project",
+    "create live investigation",
+    "review exact patch",
+    "approve in browser",
+    "observe completed verification",
+    "download JSON report",
+    "inspect live benchmark and permission injection case"
+  ],
+  "report_digest_recomputed": true,
+  "download_matches_api": true,
+  "runner": "docker",
+  "baseline_failed": 4,
+  "patched_passed": 8,
+  "provider_identity_persisted": true,
+  "source_manifests_match": true,
+  "usage": {
+    "provider_calls": 2,
+    "input_tokens": 5487,
+    "output_tokens": 1125
+  },
+  "mobile": {
+    "viewport_width": 390,
+    "document_scroll_width": 384,
+    "page_horizontal_overflow": false
+  },
+  "browser_warn_error_count": 0,
+  "approval_actor": "Codex browser acceptance under user authorization",
+  "screenshots": [
+    "docs/screenshots/live-verification.png",
+    "docs/screenshots/live-verification-full.png",
+    "docs/screenshots/live-benchmark.png"
+  ]
+}

@@ -15,6 +15,7 @@ TraceForge is a local-first engineering incident workbench. A user registers a r
 
 Project: `{id, name, root, test_command: list[str], runner: "local"|"docker", trusted: bool, github_repo: str|null, created_at}`.
 Run: `{id, project_id, title, query, mode:"replay"|"live"|"investigate", status, state:dict, created_at, updated_at, error:str|null}`.
+New live investigations persist `state.provider_identity` before their first call: configured model, API style, and SHA256 of the normalized endpoint. Recovery rejects model/style/endpoint changes, but credentials are excluded so key rotation is supported. Reports export only requested model and API style; neither implies authenticated upstream model identity. Old runs without identity remain explicitly unrecorded in exports.
 Statuses: queued -> investigating -> awaiting_approval -> verifying -> completed; rejected/failed/cancelled are terminal. No repair found can complete with evidence and no patch. Recover investigating and verifying runs by resuming persisted phase; approval must never be bypassed.
 Evidence: `{id, source, path, line_start, line_end, content, score, kind, sha256}`. IDs deterministic by source+content. Content is bounded and redacted.
 Patch: `{path, before, after, reason, evidence_ids:list[str]}` exact string replacement, before must occur exactly once, no absolute/traversal/secret paths.

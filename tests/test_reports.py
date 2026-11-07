@@ -411,3 +411,29 @@ def test_old_partial_metadata_reports_specific_unconfirmed_reason():
     assert any('旧记录' in reason for reason in report['verification']['limitations'])
     assert report['verification']['provenance']['investigation_manifest_sha256'] is None
     assert '调查与验证文件清单：未确认' in render_markdown(report)
+
+
+def test_provider_identity_is_historical_allowlisted_and_escaped():
+    run, project, events = sample()
+    run['mode'] = 'live'
+    run['state']['provider_identity'] = {'model': 'model-private-secret [x](https://example.invalid)',
+        'api_style': 'chat', 'endpoint_sha256': 'b' * 64, 'api_key': 'private-key'}
+    report = build_report(run, project, events, secrets=('private-secret',))
+    assert report['provider']['requested_model'].startswith('model-[REDACTED]')
+    assert report['provider']['api_style'] == 'chat'
+    encoded = json.dumps(report)
+    assert 'private-key' not in encoded and 'endpoint_sha256' not in encoded
+    markdown = render_markdown(report)
+    assert 'https://' not in markdown and '不证明网关实际使用的底层模型' in markdown
+    run['state'].pop('provider_identity')
+    assert build_report(run, project, events)['provider']['requested_model'] is None
+
+
+def test_diagnosis_limitations_keep_their_original_phase_after_verification():
+    run, project, events = sample()
+    run['state']['diagnosis']['limitations'] = ['No tests executed yet']
+    report = build_report(run, project, events)
+    assert report['verification']['verified'] is True
+    markdown = render_markdown(report)
+    assert '写于审批与测试之前' in markdown
+    assert markdown.index('诊断阶段的原始限制') < markdown.index('No tests executed yet') < markdown.index('验证与报告限制')

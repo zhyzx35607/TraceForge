@@ -1,7 +1,7 @@
 {
   "kind": "installed-wheel-offline-acceptance",
   "status": "passed",
-  "checked_at": "2026-11-07T05:15:53.121620+00:00",
+  "checked_at": "2026-11-07T05:47:15.818746+00:00",
   "model_capability": "not_measured",
   "limitations": [
     "Replay and oracle only; this does not measure model repair ability or Docker isolation."
@@ -32,10 +32,10 @@
     "canaries_valid": true,
     "missing_resources": [],
     "resource_files": 81,
-    "resource_sha256": "62cba63c9665ff079e68079361ba40d38db50967ac351a3a18d0548159d30984"
+    "resource_sha256": "5a1a1176a060e3c29b027bfe59c6cedcb0e57c0de2d84ce68e6c33878660271b"
   },
   "api": {
-    "run_id": "2caf29a0fd164dbfafd206c32bb2ec05",
+    "run_id": "70a50b13dc6c49448642579e75c70b1f",
     "mode": "replay",
     "status": "completed",
     "approval_digest": "94c8493118bc4355a64156ee4904fae7faf51bad2002ad60a2120949fdaffa80",
@@ -101,9 +101,9 @@
     "provider_calls": 0,
     "assets": [
       {
-        "path": "/assets/index-D0tauitr.js",
-        "bytes": 328919,
-        "sha256": "a86745ff39966ec74a340e3b597d3243a1ae1379503c1d0387cff2551870e41e"
+        "path": "/assets/index-D7MnFqGF.js",
+        "bytes": 329507,
+        "sha256": "79fca1eb0403b16905946cc77bdb150e60d5a5b54b3d1dc009b4762834e37ef7"
       },
       {
         "path": "/assets/index-SVd37wvi.css",
@@ -118,7 +118,7 @@
     "report_export": {
       "json": true,
       "markdown": true,
-      "content_sha256": "7ef46eac0b9d19dbd8eccf52d670371b76e4fba17f18cf006cc4e8ab2a8398cd",
+      "content_sha256": "d69dbfd12541d4779c1dca8d76c3583169162e4443de1d28318fa5cebc47d10a",
       "digest_verified": true
     }
   },
@@ -165,9 +165,9 @@
           }
         },
         "timings_ms": {
-          "total": 0.0094,
-          "p50": 0.0008,
-          "p95": 0.0014
+          "total": 0.0085,
+          "p50": 0.00075,
+          "p95": 0.0013
         }
       },
       "bm25": {
@@ -202,9 +202,9 @@
           }
         },
         "timings_ms": {
-          "total": 1164.2992,
-          "p50": 119.77510000000001,
-          "p95": 144.3774
+          "total": 8350.2879,
+          "p50": 132.11315,
+          "p95": 6975.7217
         }
       },
       "char": {
@@ -239,9 +239,9 @@
           }
         },
         "timings_ms": {
-          "total": 1212.973,
-          "p50": 107.31129999999999,
-          "p95": 242.9385
+          "total": 1525.9253,
+          "p50": 131.85915,
+          "p95": 294.3787
         }
       },
       "rrf": {
@@ -276,9 +276,9 @@
           }
         },
         "timings_ms": {
-          "total": 1316.5429,
-          "p50": 119.9543,
-          "p95": 211.5644
+          "total": 1702.5444,
+          "p50": 150.76274999999998,
+          "p95": 340.8001
         }
       }
     },
@@ -325,5 +325,5 @@
     }
   },
   "resources_unchanged": true,
-  "duration_ms": 26125
+  "duration_ms": 37562
 }

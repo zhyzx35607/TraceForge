@@ -303,6 +303,7 @@ def build_report(run: dict, project: dict, events: list[dict], *,
     evidence, patches, events = _list(state.get('evidence')), _list(diagnosis.get('patches')), _list(events)
     mode = run.get('mode') if isinstance(run.get('mode'), str) and run.get('mode') in MODE_LABELS else 'unknown'
     approval, usage = _dict(state.get('approval')), _dict(state.get('usage'))
+    identity = _dict(state.get('provider_identity')) if mode == 'live' else {}
     verified, reasons, provenance = _verified(run, state, verification)
     for field in ('investigation_manifest_sha256', 'verification_manifest_sha256'):
         provenance[field] = clean.digest(provenance[field])
@@ -315,6 +316,9 @@ def build_report(run: dict, project: dict, events: list[dict], *,
                 'status': clean.text(run.get('status'), 80), 'created_at': clean.text(run.get('created_at'), 80),
                 'updated_at': clean.text(run.get('updated_at'), 80)},
         'project': {'id': clean.text(project.get('id'), 200), 'name': clean.text(project.get('name'), 400)},
+        'provider': {'requested_model': clean.text(identity.get('model'), 200),
+                     'api_style': clean.text(identity.get('api_style'), 30),
+                     'meaning': '调查时配置的请求模型与协议；不证明网关实际使用的底层模型。旧记录缺失时不反推。'},
         'diagnosis': {'summary': clean.text(diagnosis.get('summary'), 4000),
                       'root_cause': clean.text(diagnosis.get('root_cause'), 8000),
                       'confidence': clean.text(diagnosis.get('confidence'), 30),
@@ -384,10 +388,12 @@ def render_markdown(report: dict) -> str:
     run, project = _dict(report.get('run')), _dict(report.get('project'))
     diagnosis, verification = _dict(report.get('diagnosis')), _dict(report.get('verification'))
     approval, usage = _dict(report.get('approval')), _dict(report.get('usage'))
+    provider = _dict(report.get('provider'))
     provenance = _dict(verification.get('provenance'))
     lines = ['# TraceForge 运行报告', '', f'项目：{_markdown(project.get("name"))}',
              f'任务：{_markdown(run.get("title"))}', f'运行 ID：{_markdown(run.get("id"))}',
              f'状态：{_markdown(run.get("status"))}', f'模式：{_markdown(run.get("mode_label"))}',
+             f'请求模型：{_markdown(provider.get("requested_model"))}；协议：{_markdown(provider.get("api_style"))}',
              f'创建时间：{_markdown(run.get("created_at"))}', f'更新时间：{_markdown(run.get("updated_at"))}',
              '', '## 问题与诊断', '', f'问题：{_markdown(run.get("query"))}',
              f'摘要：{_markdown(diagnosis.get("summary"))}', f'根因：{_markdown(diagnosis.get("root_cause"))}',
@@ -441,8 +447,12 @@ def render_markdown(report: dict) -> str:
         item = _dict(item)
         lines.append(f'- {_markdown(item.get("id"))} · {_markdown(item.get("created_at"))} · {_markdown(item.get("kind"))}')
     lines.extend(['', '## 限制与完整性', ''])
-    for scope in (diagnosis, verification, report):
+    lines.extend(['诊断阶段的原始限制（写于审批与测试之前；后续执行结果见验证章节）：', ''])
+    lines.extend('- ' + _markdown(value) for value in _list(diagnosis.get('limitations'))[:40])
+    lines.extend(['', '验证与报告限制：', ''])
+    for scope in (verification, report):
         lines.extend('- ' + _markdown(value) for value in _list(scope.get('limitations'))[:40])
+    lines.append('- ' + _markdown(provider.get('meaning')))
     for name, label in [('events', '事件'), ('evidence', '证据'), ('patches', '补丁')]:
         if report.get(name + '_truncated') is True:
             lines.append(f'- {label}列表已截断；请结合原始运行记录查看。')

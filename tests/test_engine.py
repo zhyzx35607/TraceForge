@@ -279,6 +279,9 @@ async def test_live_tool_loop_usage_and_final_validation(demo, monkeypatch):
     assert actual['status'] == 'completed', actual.get('error')
     assert len(calls) == 2
     assert actual['state']['usage'] == {'provider_calls': 2, 'input_tokens': 24, 'output_tokens': 8}
+    assert actual['state']['provider_identity'] == {
+        'model': 'test-model', 'api_style': 'chat',
+        'endpoint_sha256': hashlib.sha256(settings.base_url.rstrip('/').encode()).hexdigest()}
     assert any(event['kind'] == 'tool.result' for event in store.events(run['id']))
 
 
@@ -299,6 +302,45 @@ async def test_live_repeat_guard(demo, monkeypatch):
     assert actual['status'] == 'failed'
     assert '重复工具' in actual['error']
     assert actual['state']['agent_steps'] == 3
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('change', ['model', 'api_style', 'base_url', 'api_key'])
+async def test_live_recovery_binds_model_and_endpoint_but_allows_key_rotation(demo, monkeypatch, change):
+    settings, store, project, engine = demo
+    settings.model, settings.api_key = 'original-model', 'original-key'
+    requests = []
+
+    class InterruptedProvider:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def complete(self, messages, **kwargs):
+            requests.append(messages)
+            if len(requests) == 1:
+                raise asyncio.CancelledError
+            identity = json.loads(messages[1]['content'])['evidence'][0]['id']
+            arguments = {'summary': 'Insufficient evidence', 'root_cause': 'Unconfirmed',
+                         'confidence': 'low', 'evidence_ids': [identity], 'limitations': [], 'patches': []}
+            return {'message': {'role': 'assistant', 'content': None}, 'tool_calls': [
+                {'id': 'finish', 'name': 'finish', 'arguments': json.dumps(arguments)}]}
+
+    monkeypatch.setattr('traceforge.engine.OpenAIProvider', InterruptedProvider)
+    run = new_run(store, project, 'live')
+    with pytest.raises(asyncio.CancelledError):
+        await engine.investigate(run['id'])
+    original = copy.deepcopy(store.get_run(run['id'])['state']['provider_identity'])
+    setattr(settings, change, {'model': 'different-model', 'api_style': 'responses',
+                              'base_url': 'https://different.invalid/v1', 'api_key': 'rotated-key'}[change])
+    await Engine(store, settings).investigate(run['id'])
+    actual = store.get_run(run['id'])
+    assert actual['state']['provider_identity'] == original
+    assert 'original-key' not in json.dumps(actual) and 'rotated-key' not in json.dumps(actual)
+    if change == 'api_key':
+        assert actual['status'] == 'completed' and len(requests) == 2
+    else:
+        assert actual['status'] == 'failed' and len(requests) == 1
+        assert actual['state']['fault_type'] == 'configuration'
 
 
 @pytest.mark.asyncio

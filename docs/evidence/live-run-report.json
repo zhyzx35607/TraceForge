@@ -1,0 +1,369 @@
+{
+  "schema_version": 1,
+  "kind": "traceforge-run-report",
+  "run": {
+    "id": "afd5b4a1209b467f9909faf1cbe2b9d2",
+    "title": "真实模型验收：订单数量与折扣回归",
+    "query": "购买 3 件单价 19.90 的商品，calculate_total 返回 19.90，预期 59.70。请从代码和业务约束中定位原因，提出最小实现修改，并保留现有测试。",
+    "mode": "live",
+    "mode_label": "真实模型模式：只记录本次运行结果，单次运行不能得出模型成功率。",
+    "status": "completed",
+    "created_at": "2026-11-07T05:40:00.959860+00:00",
+    "updated_at": "2026-11-07T05:41:02.529699+00:00"
+  },
+  "project": {
+    "id": "c38e30ba5c724e17b8d0b92c393a911b",
+    "name": "DeepSeek Live · Docker 结算服务"
+  },
+  "provider": {
+    "requested_model": "deepseek-v4.1-flash",
+    "api_style": "chat",
+    "meaning": "调查时配置的请求模型与协议；不证明网关实际使用的底层模型。旧记录缺失时不反推。"
+  },
+  "diagnosis": {
+    "summary": "缺陷位于 pricing.py:10 的小计求和：仅累加单价、忽略 quantity，导致多件商品金额被低估（3×19.90 返回 19.90）。最小修复是在求和中把每行单价乘以数量，其余折扣、校验、量化逻辑保持不变，测试文件不做任何修改。",
+    "root_cause": "`calculate_total` 中的小计计算写成了对每行 `price` 的求和：`sum(Decimal(str(item[\\\"price\\\"])) for item in items)`（pricing.py 第 10 行），完全没有使用 `quantity`。因此对 `{\\\"price\\\": \\\"19.90\\\", \\\"quantity\\\": 3}`，subtotal = 19.90，折扣为 0 时直接量化为 19.90，而业务不变量要求的小计应为 19.90×3 = 59.70。同一缺陷也解释了其余三个失败用例：test_discount_applies_to_full_subtotal（应 20.00→18.00，实际按 10.00→9.00）、test_two_lines（应 25.00+5.00=30.00，实际 17.50）、test_zero_quantity（数量 0 应得 0.00，实际却按 7.00 计）。折扣逻辑、范围校验与两位小数 ROUND_HALF_UP 量化本身正确，无需改动。",
+    "confidence": "high",
+    "limitations": [
+      "本次仅做静态代码与业务约束比对，未实际执行 python -m unittest discover -v，测试结果与四个对照用例的通过情况未经运行验证。",
+      "未校验非整数数量（如小数件数）或缺失 quantity 键等边界输入的行为，超出当前症状范围。",
+      "未检查仓库中是否还有其他调用方依赖旧的“忽略数量”行为。"
+    ],
+    "evidence_ids": [
+      "ev_471ee9338eeab119cded0c46",
+      "ev_f260f53c510f77ab38f0a941",
+      "ev_ce31bf91a0377f94148b15a2",
+      "symptom-30f0af4e32b5456d7092"
+    ]
+  },
+  "evidence": [
+    {
+      "id": "ev_471ee9338eeab119cded0c46",
+      "path": "pricing.py",
+      "line_start": 1,
+      "line_end": 13,
+      "partial_line": false,
+      "source": "repository",
+      "kind": "code",
+      "sha256": "10fe072ba98cd368b3b64e0ba22bcaa05512374840ad6902a4aa51d1a0d5d9d4"
+    },
+    {
+      "id": "ev_f260f53c510f77ab38f0a941",
+      "path": "README.md",
+      "line_start": 1,
+      "line_end": 9,
+      "partial_line": false,
+      "source": "repository",
+      "kind": "code",
+      "sha256": "d7f2afb34581a9dc633af64aaa082cd7a5fd2c1e4bbc97bd2e88b21f6863da2b"
+    },
+    {
+      "id": "ev_ce31bf91a0377f94148b15a2",
+      "path": "test_pricing.py",
+      "line_start": 1,
+      "line_end": 35,
+      "partial_line": false,
+      "source": "repository",
+      "kind": "code",
+      "sha256": "8bf96127d472adfead2df9d960efea6bd2d5938aa128e80729956cdf113f2106"
+    },
+    {
+      "id": "symptom-30f0af4e32b5456d7092",
+      "path": "incident.txt",
+      "line_start": 1,
+      "line_end": 1,
+      "partial_line": false,
+      "source": "submitted_symptom",
+      "kind": "log",
+      "sha256": "30f0af4e32b5456d70921763a87f4cb174ad95104e7bd935b4607956ddd44419"
+    }
+  ],
+  "citations": {
+    "requested_ids": [
+      "ev_471ee9338eeab119cded0c46",
+      "ev_f260f53c510f77ab38f0a941",
+      "ev_ce31bf91a0377f94148b15a2",
+      "symptom-30f0af4e32b5456d7092"
+    ],
+    "unavailable_evidence_ids": [],
+    "complete": true,
+    "evidence_scan_limited": false
+  },
+  "patches": [
+    {
+      "path": "pricing.py",
+      "reason": "小计需按业务约束「每行单价×数量」累加；原实现只累加单价，导致多件订单金额偏小（3 件 19.90 只返回 19.90）。改为乘以数量后可同时修复 test_multiple_quantity、test_discount_applies_to_full_subtotal、test_two_lines、test_zero_quantity，且折扣仍作用于完整小计并保留两位 ROUND_HALF_UP 量化，空车与单项等对照用例不受影响。测试文件未改动。",
+      "evidence_ids": [
+        "ev_471ee9338eeab119cded0c46",
+        "ev_f260f53c510f77ab38f0a941",
+        "ev_ce31bf91a0377f94148b15a2"
+      ],
+      "before_sha256": "f7a087479d468ecff8dc8462e54db7bcff1f37b75c10131c0b59e57cddeb6e5e",
+      "after_sha256": "94a5f87f787b2fdfaa6675fd81668527eac952c0b6267560597d54042aac9bc7"
+    }
+  ],
+  "approval": {
+    "decision": "approve",
+    "patch_digest": "b0a91cddc6536600d5adc5f3bdc8647095142f51e0c09049451f87acb2e26035",
+    "approved_at": "2026-11-07T05:40:44.335829+00:00"
+  },
+  "verification": {
+    "available": true,
+    "verified": true,
+    "regression_fixed": true,
+    "reported_regression_fixed": true,
+    "provenance": {
+      "manifests_match": true,
+      "investigation_manifest_sha256": "42951b3dcc2cffd2e527c379b30b9a119c5140be54efbe67fc5636d961249d2d",
+      "verification_manifest_sha256": "42951b3dcc2cffd2e527c379b30b9a119c5140be54efbe67fc5636d961249d2d",
+      "investigation_file_count": 3,
+      "verification_file_count": 3,
+      "repository_evidence_matches": true,
+      "citations_valid": true,
+      "patch_targets_cited": true
+    },
+    "runner": "docker",
+    "baseline": {
+      "exit_code": 1,
+      "duration_ms": 6750,
+      "timed_out": false,
+      "observation_status": "completed",
+      "tests": {
+        "source": "external_observer",
+        "framework": "unittest",
+        "completed": true,
+        "valid_observer": true,
+        "executed": 8,
+        "passed": 4,
+        "failed": 4,
+        "skipped": 0
+      }
+    },
+    "patched": {
+      "exit_code": 0,
+      "duration_ms": 6641,
+      "timed_out": false,
+      "observation_status": "completed",
+      "tests": {
+        "source": "external_observer",
+        "framework": "unittest",
+        "completed": true,
+        "valid_observer": true,
+        "executed": 8,
+        "passed": 8,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    "limitations": [
+      "测试报告来自仓库外观察器；同一 Python 进程内的反射或 monkey-patching 不构成密码学防篡改保证。"
+    ]
+  },
+  "usage": {
+    "provider_calls": 2,
+    "input_tokens": 5487,
+    "output_tokens": 1125
+  },
+  "events": [
+    {
+      "id": 102,
+      "kind": "run.created",
+      "created_at": "2026-11-07T05:40:00.959860+00:00"
+    },
+    {
+      "id": 103,
+      "kind": "run.status",
+      "created_at": "2026-11-07T05:40:01.092782+00:00"
+    },
+    {
+      "id": 104,
+      "kind": "retrieval.indexed",
+      "created_at": "2026-11-07T05:40:01.194898+00:00"
+    },
+    {
+      "id": 105,
+      "kind": "specialist.started",
+      "created_at": "2026-11-07T05:40:01.275903+00:00"
+    },
+    {
+      "id": 106,
+      "kind": "specialist.started",
+      "created_at": "2026-11-07T05:40:01.321841+00:00"
+    },
+    {
+      "id": 107,
+      "kind": "specialist.started",
+      "created_at": "2026-11-07T05:40:01.384709+00:00"
+    },
+    {
+      "id": 108,
+      "kind": "specialist.completed",
+      "created_at": "2026-11-07T05:40:01.427819+00:00"
+    },
+    {
+      "id": 109,
+      "kind": "specialist.completed",
+      "created_at": "2026-11-07T05:40:01.458224+00:00"
+    },
+    {
+      "id": 110,
+      "kind": "specialist.completed",
+      "created_at": "2026-11-07T05:40:01.486114+00:00"
+    },
+    {
+      "id": 111,
+      "kind": "runtime.checkpoint",
+      "created_at": "2026-11-07T05:40:01.530264+00:00"
+    },
+    {
+      "id": 112,
+      "kind": "runtime.checkpoint",
+      "created_at": "2026-11-07T05:40:01.609921+00:00"
+    },
+    {
+      "id": 113,
+      "kind": "provider.attempt",
+      "created_at": "2026-11-07T05:40:02.863973+00:00"
+    },
+    {
+      "id": 114,
+      "kind": "provider.usage",
+      "created_at": "2026-11-07T05:40:05.953930+00:00"
+    },
+    {
+      "id": 115,
+      "kind": "tool.called",
+      "created_at": "2026-11-07T05:40:06.015065+00:00"
+    },
+    {
+      "id": 116,
+      "kind": "tool.result",
+      "created_at": "2026-11-07T05:40:06.060340+00:00"
+    },
+    {
+      "id": 117,
+      "kind": "tool.called",
+      "created_at": "2026-11-07T05:40:06.078858+00:00"
+    },
+    {
+      "id": 118,
+      "kind": "tool.result",
+      "created_at": "2026-11-07T05:40:06.096420+00:00"
+    },
+    {
+      "id": 119,
+      "kind": "runtime.checkpoint",
+      "created_at": "2026-11-07T05:40:06.172511+00:00"
+    },
+    {
+      "id": 120,
+      "kind": "runtime.checkpoint",
+      "created_at": "2026-11-07T05:40:06.217437+00:00"
+    },
+    {
+      "id": 121,
+      "kind": "provider.attempt",
+      "created_at": "2026-11-07T05:40:06.651947+00:00"
+    },
+    {
+      "id": 122,
+      "kind": "provider.usage",
+      "created_at": "2026-11-07T05:40:13.821171+00:00"
+    },
+    {
+      "id": 123,
+      "kind": "tool.called",
+      "created_at": "2026-11-07T05:40:13.862260+00:00"
+    },
+    {
+      "id": 124,
+      "kind": "runtime.checkpoint",
+      "created_at": "2026-11-07T05:40:13.905214+00:00"
+    },
+    {
+      "id": 125,
+      "kind": "diagnosis.ready",
+      "created_at": "2026-11-07T05:40:13.941790+00:00"
+    },
+    {
+      "id": 126,
+      "kind": "run.status",
+      "created_at": "2026-11-07T05:40:13.967906+00:00"
+    },
+    {
+      "id": 127,
+      "kind": "approval.decided",
+      "created_at": "2026-11-07T05:40:44.335829+00:00"
+    },
+    {
+      "id": 128,
+      "kind": "run.status",
+      "created_at": "2026-11-07T05:40:44.335829+00:00"
+    },
+    {
+      "id": 129,
+      "kind": "runtime.checkpoint",
+      "created_at": "2026-11-07T05:40:44.529946+00:00"
+    },
+    {
+      "id": 130,
+      "kind": "verification.started",
+      "created_at": "2026-11-07T05:40:47.370186+00:00"
+    },
+    {
+      "id": 131,
+      "kind": "verification.result",
+      "created_at": "2026-11-07T05:40:54.611805+00:00"
+    },
+    {
+      "id": 132,
+      "kind": "verification.started",
+      "created_at": "2026-11-07T05:40:54.717617+00:00"
+    },
+    {
+      "id": 133,
+      "kind": "verification.result",
+      "created_at": "2026-11-07T05:41:02.441579+00:00"
+    },
+    {
+      "id": 134,
+      "kind": "verification.completed",
+      "created_at": "2026-11-07T05:41:02.534216+00:00"
+    },
+    {
+      "id": 135,
+      "kind": "run.status",
+      "created_at": "2026-11-07T05:41:02.534216+00:00"
+    }
+  ],
+  "counts": {
+    "events_supplied": 34,
+    "evidence_total": 4,
+    "patches_total": 1,
+    "events_exported": 34,
+    "evidence_exported": 4,
+    "patches_exported": 1
+  },
+  "limits": {
+    "events": 1000,
+    "evidence": 100,
+    "patches": 10,
+    "citations": 30,
+    "limitations": 20
+  },
+  "events_truncated": false,
+  "evidence_truncated": false,
+  "patches_truncated": false,
+  "limitations": [
+    "诊断文字、标题与路径仍可能包含业务信息；字段白名单和脱敏不是匿名化保证。",
+    "用量仅统计服务端已返回并记录的值；失败或中断请求的零值不代表零消耗、零费用。",
+    "观察器与测试处于同一 Python 进程，反射或 monkey-patching 不具备密码学防篡改保证。",
+    "本报告是本地记录快照；内容摘要仅用于校验文件内容完整性，不是签名或外部证明。"
+  ],
+  "integrity": {
+    "algorithm": "sha256",
+    "canonicalization": "JSON UTF-8; ensure_ascii=False; sort_keys=True; separators=(\",\", \":\"); omit content_sha256",
+    "meaning": "规范 JSON 内容完整性校验；不是 Markdown 文件哈希、签名或外部证明。"
+  },
+  "content_sha256": "2fb990dc34a55641e3d7674a45eccc6d4a92bab81200f4ae4a8011223c8327e2"
+}

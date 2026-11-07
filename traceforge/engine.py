@@ -425,6 +425,15 @@ class Engine:
 
     async def _live(self, run_id, run, index, evidence, root, started) -> dict:
         state = self.store.get_run(run_id)['state']
+        # Persist request identity before the first call. A recovered tool history
+        # must not silently continue against a different model or endpoint.
+        configured = {'model': self.settings.model, 'api_style': self.settings.api_style,
+                      'endpoint_sha256': hashlib.sha256(self.settings.base_url.rstrip('/').encode()).hexdigest()}
+        if 'provider_identity' in state and state['provider_identity'] != configured:
+            raise ProviderError('恢复调查时模型或接口配置已改变；请恢复原配置或创建新调查',
+                                fault_type='configuration')
+        if 'provider_identity' not in state:
+            self.store.update_run(run_id, state={'provider_identity': configured})
         manifest = state['source_manifest']
         messages = state.get('agent_messages')
         seen_ids = set(state.get('seen_evidence_ids', []))
