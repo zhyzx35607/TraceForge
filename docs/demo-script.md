@@ -16,6 +16,7 @@ npm run build
 Pop-Location
 .venv\Scripts\python.exe -m pytest -q
 .venv\Scripts\python.exe -m traceforge evaluate
+.venv\Scripts\python.exe -m traceforge retrieval-evaluate
 .venv\Scripts\python.exe -m traceforge benchmark --mode oracle
 .venv\Scripts\python.exe -m traceforge serve
 ```
@@ -30,13 +31,14 @@ Pop-Location
 | `.traceforge/evaluation.json` | 离线机制评测结果 |
 | `.traceforge/benchmark/latest.json` | 最新多故障报告；先确认 `mode`，它可能被之后的运行替换 |
 | `.traceforge/benchmark/runs/<session_id>/report.json` | 某次固定版本报告，适合解释独立分母 |
-| `.traceforge/docker-validation-v2/report.json` | 已执行的 Docker 与 `external_observer` 结果 |
+| [Docker 验收摘要](evidence/docker-validation.json) | 已执行的 Docker、`external_observer` 与持久证据来源核验结果；本机原始位置见验收记录 |
+| [本机并发验收](evidence/local-concurrency.json) | 12 条合成任务的重复审批、拒绝、取消、记忆与队列一致性；不是生产容量 |
 | [实际导出的运行报告](evidence/sample-run-report.md) | 固定样例的诊断、证据索引、审批摘要与真实测试计数；现场也可点击 Markdown / JSON 下载 |
 | `.traceforge/screenshots/` | 现场窗口故障时的历史截图；展示时说明是已保存记录 |
 
 若要讲 Docker，演示前运行 `docker info`，确认当前 daemon 与镜像可用。内置 UI 演示使用可信 local runner，不要把页面上的 `local` 说成 Docker。Docker 证据应打开对应实际报告，或单独运行经过准备的 Docker 验证。
 
-若要讲真实模型，只展示脱敏后的诊断和失败记录。2026-11-07 02:45 UTC（上海 10:45）的本轮探测里，`/models` 可返回 200，但最小 Responses 请求返回 403；此前还出现 429 和网络超时，尚无成功的 live 修复。不要在现场反复重试来掩盖这个事实；`doctor --smoke` 会发送真实生成请求，仅在已明确准备相应服务时使用。
+若要讲真实模型，只展示脱敏后的诊断和失败记录。2026-11-07 05:10 UTC（上海 13:10）停止子代理后的独立探测里，`/models` 返回 200，但最小 Responses 请求仍返回 403；此前还出现 429 和网络超时，尚无成功的 live 修复。不要在现场反复重试来掩盖这个事实；`doctor --smoke` 会发送真实生成请求，仅在已明确准备相应服务时使用。
 
 ## 五分钟主流程
 
@@ -60,7 +62,7 @@ Pop-Location
 | 真实检索与运行对比 | 在“新建调查”选“证据检索”，提交结算数量规则问题；完成后与回放运行对比 | 检索返回真实材料，但没有模型调用和回归验证，不应显示为已修复。耗时包含等待审批，不能直接当模型推理耗时。 |
 | 多故障基准 | 打开“多故障基准”，确认顶部模式，展开一个修复案例和一个应拒答案例 | Oracle 的模型功能正确率应为“未测”；验证器、拒答、安全、检索使用各自分母。案例“执行完成”不等于所有质量维度成功。 |
 | 隐藏断言 | 展开修复案例的公开／隐藏验证，再展开不应修改的案例 | 修复案例看两组真实结果；拒答案例看原样契约是否通过、补丁数是否为零。隐藏材料在调查结束后才进入独立验证目录。 |
-| Docker 与外部观察器 | 打开已保存的 Docker v2 报告，定位 `runner`、`tests.source`、`identities`、`completed`、前后结果与 `limitations` | UI 回放的 local 与已实测的 Docker 是两份证据。观察器独立于仓库，但同进程反射仍是明确限制。 |
+| Docker 与外部观察器 | 打开已保存的 Docker 报告，定位 `runner`、`tests.source`、`identities`、`completed`、前后结果与 `limitations` | UI 回放的 local 与已实测的 Docker 是两份证据。观察器独立于仓库，但同进程反射仍是明确限制。 |
 | 恢复与审批冲突 | 运行下方已存在的定向回归，或展示上次完整验收记录 | 事务审批和租约解决授权一致性与旧 worker 写入；恢复是至少一次，并非自动获得 exactly-once。 |
 | 报告导出与复盘 | 点击调查详情中的 Markdown 或 JSON，打开实际下载文件 | 报告使用一致的数据库快照，保留模式与限制；摘要可检查内容一致性，但不是数字签名或外部证明。 |
 

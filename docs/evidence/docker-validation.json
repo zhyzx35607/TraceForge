@@ -1,7 +1,22 @@
 {
-  "status": "completed",
-  "run_id": "360638965c3b46e28a1532980a231bbd",
+  "kind": "docker-boundary-acceptance",
+  "checked_at": "2026-11-07T05:11:46.237943+00:00",
+  "run_id": "d15e9f0ed7894268b2057364ddd6546d",
+  "mode": "replay",
+  "provider_calls": 0,
+  "status": "passed",
   "source_unchanged": true,
+  "duration_ms": 24110,
+  "report_provenance": {
+    "manifests_match": true,
+    "investigation_manifest_sha256": "42951b3dcc2cffd2e527c379b30b9a119c5140be54efbe67fc5636d961249d2d",
+    "verification_manifest_sha256": "42951b3dcc2cffd2e527c379b30b9a119c5140be54efbe67fc5636d961249d2d",
+    "investigation_file_count": 3,
+    "verification_file_count": 3,
+    "repository_evidence_matches": true,
+    "citations_valid": true,
+    "patch_targets_cited": true
+  },
   "runner": "docker",
   "regression_fixed": true,
   "limitations": [
@@ -9,7 +24,7 @@
   ],
   "baseline": {
     "exit_code": 1,
-    "duration_ms": 25250,
+    "duration_ms": 18781,
     "tests": {
       "completed": true,
       "executed": 8,
@@ -43,7 +58,7 @@
   },
   "patched": {
     "exit_code": 0,
-    "duration_ms": 2532,
+    "duration_ms": 2578,
     "tests": {
       "completed": true,
       "executed": 8,

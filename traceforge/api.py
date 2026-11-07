@@ -115,20 +115,50 @@ def create_app(settings: Settings | None = None, *, start_workers: bool = True) 
     @app.middleware("http")
     async def local_security(request: Request, call_next):
         if request.scope["path"].startswith("/api/"):
+            def http_origin(value: str, scheme: str | None = None) -> tuple[str, str, int]:
+                # Browser Origins serialize an authority, never a URL path or
+                # credentials. urlsplit alone accepts empty ports and strips
+                # some control characters, so validate the original value too.
+                if (not value or len(value) > 2048 or not value.isascii()
+                        or any(ord(char) <= 32 or ord(char) == 127 for char in value)
+                        or any(char in value for char in "\\?#,")):
+                    raise ValueError("invalid origin")
+                parts = urlsplit("//" + value if scheme is not None else value)
+                normalized_scheme = scheme.lower() if scheme is not None else parts.scheme.lower()
+                host, port = parts.hostname, parts.port
+                if (normalized_scheme not in {"http", "https"} or not parts.netloc or not host
+                        or parts.username is not None or parts.password is not None
+                        or parts.path or parts.query or parts.fragment):
+                    raise ValueError("invalid origin")
+                authority = parts.netloc
+                if authority.startswith("["):
+                    from ipaddress import IPv6Address
+                    closing = authority.index("]")
+                    if authority[1:closing].lower() != host:
+                        raise ValueError("invalid IPv6 authority")
+                    host = IPv6Address(host).compressed
+                    suffix = authority[closing + 1:]
+                else:
+                    host_text, separator, raw_port = authority.partition(":")
+                    if (host_text.lower() != host
+                            or any(char not in "abcdefghijklmnopqrstuvwxyz0123456789.-_" for char in host)):
+                        raise ValueError("invalid hostname")
+                    suffix = separator + raw_port
+                if suffix and (not suffix.startswith(":") or not suffix[1:].isdigit()):
+                    raise ValueError("invalid port")
+                return normalized_scheme, host, port if port is not None else (443 if normalized_scheme == "https" else 80)
+
             origin = request.headers.get("origin")
             try:
-                host_parts = urlsplit("//" + request.headers.get("host", ""))
-                host = host_parts.hostname
-                if host_parts.username or host_parts.password:
-                    raise ValueError("invalid host")
-                origin_parts = urlsplit(origin) if origin else None
-                origin_host = origin_parts.hostname if origin_parts else None
+                if len(request.headers.getlist("host")) != 1 or len(request.headers.getlist("origin")) > 1:
+                    raise ValueError("ambiguous origin")
+                target_origin = http_origin(request.headers.get("host", ""), request.scope["scheme"])
+                supplied_origin = http_origin(origin) if origin is not None else None
             except ValueError:
                 return JSONResponse({"detail": "无效的 Host 或 Origin"}, status_code=400)
-            if not settings.api_token and host not in {"127.0.0.1", "localhost", "testserver", "::1"}:
+            if not settings.api_token and target_origin[1] not in {"127.0.0.1", "localhost", "testserver", "::1"}:
                 return JSONResponse({"detail": "远程访问必须配置 TRACEFORGE_API_TOKEN"}, status_code=403)
-            if (origin_parts and origin_host not in {"127.0.0.1", "localhost", "::1"}
-                    and origin_parts.netloc != request.headers.get("host")):
+            if supplied_origin is not None and supplied_origin != target_origin:
                 return JSONResponse({"detail": "不允许跨站访问本地工作台"}, status_code=403)
             if settings.api_token:
                 expected = f"Bearer {settings.api_token}"
@@ -307,6 +337,20 @@ def create_app(settings: Settings | None = None, *, start_workers: bool = True) 
             return {"available": True, **json.loads(path.read_text(encoding="utf-8"))}
         except (OSError, ValueError) as exc:
             raise HTTPException(500, f"基准报告不可读：{type(exc).__name__}") from exc
+
+    @app.get("/api/retrieval-evaluation")
+    def retrieval_evaluation():
+        path = settings.data_dir / "retrieval-evaluation.json"
+        if not path.is_file():
+            return JSONResponse({"available": False, "message": "尚未运行检索消融；请执行 traceforge retrieval-evaluate"},
+                                status_code=404)
+        try:
+            report = json.loads(path.read_text(encoding="utf-8"))
+            if not isinstance(report, dict) or report.get("kind") != "synthetic-retrieval-pilot":
+                raise ValueError("unknown retrieval report")
+            return {**report, "available": True}
+        except (OSError, ValueError) as exc:
+            raise HTTPException(500, f"检索消融报告不可读：{type(exc).__name__}") from exc
 
     dist = WEB_ROOT
     if dist.is_dir():

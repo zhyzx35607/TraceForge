@@ -1,0 +1,2920 @@
+{
+  "schema_version": 1,
+  "kind": "synthetic-local-concurrency-acceptance",
+  "status": "passed",
+  "checked_at": "2026-11-07T05:12:37.574232+00:00",
+  "mode": "replay",
+  "model_capability": "not_measured",
+  "production_capacity": "not_measured",
+  "expected_worker_slots": 2,
+  "planned_runs": 12,
+  "planned_actions": {
+    "approve": 6,
+    "reject": 3,
+    "cancel": 3
+  },
+  "timeout_seconds": 180.0,
+  "environment": {
+    "os": "Windows",
+    "architecture": "AMD64",
+    "driver_python": [
+      3,
+      12,
+      10
+    ],
+    "application_version": "0.1.0",
+    "child_python": [
+      3,
+      12,
+      10
+    ]
+  },
+  "provider_calls": 0,
+  "own_server_stopped": true,
+  "runs": [
+    {
+      "label": "run-01",
+      "action": "approve",
+      "status": "completed",
+      "provider_calls": 0,
+      "created_status": "queued",
+      "decision_responses": [
+        200,
+        409
+      ],
+      "transitions": [
+        "investigating",
+        "awaiting_approval",
+        "verifying",
+        "completed"
+      ],
+      "event_counts": {
+        "approval.decided": 1,
+        "diagnosis.ready": 1,
+        "replay.fixture": 1,
+        "retrieval.indexed": 1,
+        "run.created": 1,
+        "run.status": 4,
+        "runtime.checkpoint": 2,
+        "specialist.completed": 3,
+        "specialist.started": 3,
+        "verification.completed": 1,
+        "verification.result": 2,
+        "verification.started": 2
+      },
+      "memory_count": 1,
+      "phases": {
+        "baseline": {
+          "executed": 8,
+          "passed": 4,
+          "failed": 4,
+          "skipped": 0,
+          "exit_code": 1,
+          "duration_ms": 1359
+        },
+        "patched": {
+          "executed": 8,
+          "passed": 8,
+          "failed": 0,
+          "skipped": 0,
+          "exit_code": 0,
+          "duration_ms": 1031
+        }
+      },
+      "durations": {
+        "created_to_terminal_ms": 9165.107,
+        "queue_ms": 708.422,
+        "investigate_ms": 472.495,
+        "decision_wait_ms": 3636.087,
+        "approved_to_completed_ms": 4349.103,
+        "verification_queue_ms": 356.944
+      },
+      "report_verified": true,
+      "consistency_passed": true
+    },
+    {
+      "label": "run-02",
+      "action": "approve",
+      "status": "completed",
+      "provider_calls": 0,
+      "created_status": "queued",
+      "decision_responses": [
+        200,
+        409
+      ],
+      "transitions": [
+        "investigating",
+        "awaiting_approval",
+        "verifying",
+        "completed"
+      ],
+      "event_counts": {
+        "approval.decided": 1,
+        "diagnosis.ready": 1,
+        "replay.fixture": 1,
+        "retrieval.indexed": 1,
+        "run.created": 1,
+        "run.status": 4,
+        "runtime.checkpoint": 2,
+        "specialist.completed": 3,
+        "specialist.started": 3,
+        "verification.completed": 1,
+        "verification.result": 2,
+        "verification.started": 2
+      },
+      "memory_count": 1,
+      "phases": {
+        "baseline": {
+          "executed": 8,
+          "passed": 4,
+          "failed": 4,
+          "skipped": 0,
+          "exit_code": 1,
+          "duration_ms": 1094
+        },
+        "patched": {
+          "executed": 8,
+          "passed": 8,
+          "failed": 0,
+          "skipped": 0,
+          "exit_code": 0,
+          "duration_ms": 1312
+        }
+      },
+      "durations": {
+        "created_to_terminal_ms": 7690.513,
+        "queue_ms": 1018.155,
+        "investigate_ms": 620.097,
+        "decision_wait_ms": 3165.168,
+        "approved_to_completed_ms": 2888.093,
+        "verification_queue_ms": 334.394
+      },
+      "report_verified": true,
+      "consistency_passed": true
+    },
+    {
+      "label": "run-03",
+      "action": "approve",
+      "status": "completed",
+      "provider_calls": 0,
+      "created_status": "queued",
+      "decision_responses": [
+        200,
+        409
+      ],
+      "transitions": [
+        "investigating",
+        "awaiting_approval",
+        "verifying",
+        "completed"
+      ],
+      "event_counts": {
+        "approval.decided": 1,
+        "diagnosis.ready": 1,
+        "replay.fixture": 1,
+        "retrieval.indexed": 1,
+        "run.created": 1,
+        "run.status": 4,
+        "runtime.checkpoint": 2,
+        "specialist.completed": 3,
+        "specialist.started": 3,
+        "verification.completed": 1,
+        "verification.result": 2,
+        "verification.started": 2
+      },
+      "memory_count": 1,
+      "phases": {
+        "baseline": {
+          "executed": 8,
+          "passed": 4,
+          "failed": 4,
+          "skipped": 0,
+          "exit_code": 1,
+          "duration_ms": 922
+        },
+        "patched": {
+          "executed": 8,
+          "passed": 8,
+          "failed": 0,
+          "skipped": 0,
+          "exit_code": 0,
+          "duration_ms": 641
+        }
+      },
+      "durations": {
+        "created_to_terminal_ms": 9896.014,
+        "queue_ms": 1452.482,
+        "investigate_ms": 638.608,
+        "decision_wait_ms": 2678.293,
+        "approved_to_completed_ms": 5126.631,
+        "verification_queue_ms": 3355.893
+      },
+      "report_verified": true,
+      "consistency_passed": true
+    },
+    {
+      "label": "run-04",
+      "action": "approve",
+      "status": "completed",
+      "provider_calls": 0,
+      "created_status": "queued",
+      "decision_responses": [
+        200,
+        409
+      ],
+      "transitions": [
+        "investigating",
+        "awaiting_approval",
+        "verifying",
+        "completed"
+      ],
+      "event_counts": {
+        "approval.decided": 1,
+        "diagnosis.ready": 1,
+        "replay.fixture": 1,
+        "retrieval.indexed": 1,
+        "run.created": 1,
+        "run.status": 4,
+        "runtime.checkpoint": 2,
+        "specialist.completed": 3,
+        "specialist.started": 3,
+        "verification.completed": 1,
+        "verification.result": 2,
+        "verification.started": 2
+      },
+      "memory_count": 1,
+      "phases": {
+        "baseline": {
+          "executed": 8,
+          "passed": 4,
+          "failed": 4,
+          "skipped": 0,
+          "exit_code": 1,
+          "duration_ms": 547
+        },
+        "patched": {
+          "executed": 8,
+          "passed": 8,
+          "failed": 0,
+          "skipped": 0,
+          "exit_code": 0,
+          "duration_ms": 469
+        }
+      },
+      "durations": {
+        "created_to_terminal_ms": 10513.024,
+        "queue_ms": 1820.439,
+        "investigate_ms": 438.024,
+        "decision_wait_ms": 2462.748,
+        "approved_to_completed_ms": 5792.812,
+        "verification_queue_ms": 4556.179
+      },
+      "report_verified": true,
+      "consistency_passed": true
+    },
+    {
+      "label": "run-05",
+      "action": "approve",
+      "status": "completed",
+      "provider_calls": 0,
+      "created_status": "queued",
+      "decision_responses": [
+        200,
+        409
+      ],
+      "transitions": [
+        "investigating",
+        "awaiting_approval",
+        "verifying",
+        "completed"
+      ],
+      "event_counts": {
+        "approval.decided": 1,
+        "diagnosis.ready": 1,
+        "replay.fixture": 1,
+        "retrieval.indexed": 1,
+        "run.created": 1,
+        "run.status": 4,
+        "runtime.checkpoint": 2,
+        "specialist.completed": 3,
+        "specialist.started": 3,
+        "verification.completed": 1,
+        "verification.result": 2,
+        "verification.started": 2
+      },
+      "memory_count": 1,
+      "phases": {
+        "baseline": {
+          "executed": 8,
+          "passed": 4,
+          "failed": 4,
+          "skipped": 0,
+          "exit_code": 1,
+          "duration_ms": 437
+        },
+        "patched": {
+          "executed": 8,
+          "passed": 8,
+          "failed": 0,
+          "skipped": 0,
+          "exit_code": 0,
+          "duration_ms": 438
+        }
+      },
+      "durations": {
+        "created_to_terminal_ms": 11866.279,
+        "queue_ms": 2496.713,
+        "investigate_ms": 298.387,
+        "decision_wait_ms": 1446.761,
+        "approved_to_completed_ms": 7624.418,
+        "verification_queue_ms": 6021.588
+      },
+      "report_verified": true,
+      "consistency_passed": true
+    },
+    {
+      "label": "run-06",
+      "action": "approve",
+      "status": "completed",
+      "provider_calls": 0,
+      "created_status": "queued",
+      "decision_responses": [
+        200,
+        409
+      ],
+      "transitions": [
+        "investigating",
+        "awaiting_approval",
+        "verifying",
+        "completed"
+      ],
+      "event_counts": {
+        "approval.decided": 1,
+        "diagnosis.ready": 1,
+        "replay.fixture": 1,
+        "retrieval.indexed": 1,
+        "run.created": 1,
+        "run.status": 4,
+        "runtime.checkpoint": 2,
+        "specialist.completed": 3,
+        "specialist.started": 3,
+        "verification.completed": 1,
+        "verification.result": 2,
+        "verification.started": 2
+      },
+      "memory_count": 1,
+      "phases": {
+        "baseline": {
+          "executed": 8,
+          "passed": 4,
+          "failed": 4,
+          "skipped": 0,
+          "exit_code": 1,
+          "duration_ms": 515
+        },
+        "patched": {
+          "executed": 8,
+          "passed": 8,
+          "failed": 0,
+          "skipped": 0,
+          "exit_code": 0,
+          "duration_ms": 422
+        }
+      },
+      "durations": {
+        "created_to_terminal_ms": 10537.378,
+        "queue_ms": 1847.904,
+        "investigate_ms": 362.433,
+        "decision_wait_ms": 2347.123,
+        "approved_to_completed_ms": 5979.918,
+        "verification_queue_ms": 4945.237
+      },
+      "report_verified": true,
+      "consistency_passed": true
+    },
+    {
+      "label": "run-07",
+      "action": "reject",
+      "status": "rejected",
+      "provider_calls": 0,
+      "created_status": "queued",
+      "decision_responses": [
+        200,
+        409
+      ],
+      "transitions": [
+        "investigating",
+        "awaiting_approval",
+        "rejected"
+      ],
+      "event_counts": {
+        "approval.decided": 1,
+        "diagnosis.ready": 1,
+        "replay.fixture": 1,
+        "retrieval.indexed": 1,
+        "run.created": 1,
+        "run.status": 3,
+        "runtime.checkpoint": 1,
+        "specialist.completed": 3,
+        "specialist.started": 3
+      },
+      "memory_count": 0,
+      "phases": {},
+      "durations": {
+        "created_to_terminal_ms": 4519.508,
+        "queue_ms": 2083.845,
+        "investigate_ms": 261.174
+      },
+      "report_verified": false,
+      "consistency_passed": true
+    },
+    {
+      "label": "run-08",
+      "action": "reject",
+      "status": "rejected",
+      "provider_calls": 0,
+      "created_status": "queued",
+      "decision_responses": [
+        200,
+        409
+      ],
+      "transitions": [
+        "investigating",
+        "awaiting_approval",
+        "rejected"
+      ],
+      "event_counts": {
+        "approval.decided": 1,
+        "diagnosis.ready": 1,
+        "replay.fixture": 1,
+        "retrieval.indexed": 1,
+        "run.created": 1,
+        "run.status": 3,
+        "runtime.checkpoint": 1,
+        "specialist.completed": 3,
+        "specialist.started": 3
+      },
+      "memory_count": 0,
+      "phases": {},
+      "durations": {
+        "created_to_terminal_ms": 4598.071,
+        "queue_ms": 2288.807,
+        "investigate_ms": 422.445
+      },
+      "report_verified": false,
+      "consistency_passed": true
+    },
+    {
+      "label": "run-09",
+      "action": "reject",
+      "status": "rejected",
+      "provider_calls": 0,
+      "created_status": "queued",
+      "decision_responses": [
+        200,
+        409
+      ],
+      "transitions": [
+        "investigating",
+        "awaiting_approval",
+        "rejected"
+      ],
+      "event_counts": {
+        "approval.decided": 1,
+        "diagnosis.ready": 1,
+        "replay.fixture": 1,
+        "retrieval.indexed": 1,
+        "run.created": 1,
+        "run.status": 3,
+        "runtime.checkpoint": 1,
+        "specialist.completed": 3,
+        "specialist.started": 3
+      },
+      "memory_count": 0,
+      "phases": {},
+      "durations": {
+        "created_to_terminal_ms": 4663.035,
+        "queue_ms": 1790.813,
+        "investigate_ms": 163.439
+      },
+      "report_verified": false,
+      "consistency_passed": true
+    },
+    {
+      "label": "run-10",
+      "action": "cancel",
+      "status": "cancelled",
+      "provider_calls": 0,
+      "created_status": "queued",
+      "decision_responses": [],
+      "transitions": [
+        "cancelled"
+      ],
+      "event_counts": {
+        "run.cancelled": 1,
+        "run.created": 1,
+        "run.status": 1
+      },
+      "memory_count": 0,
+      "phases": {},
+      "durations": {
+        "created_to_terminal_ms": 62.023
+      },
+      "report_verified": false,
+      "consistency_passed": true
+    },
+    {
+      "label": "run-11",
+      "action": "cancel",
+      "status": "cancelled",
+      "provider_calls": 0,
+      "created_status": "queued",
+      "decision_responses": [],
+      "transitions": [
+        "cancelled"
+      ],
+      "event_counts": {
+        "run.cancelled": 1,
+        "run.created": 1,
+        "run.status": 1
+      },
+      "memory_count": 0,
+      "phases": {},
+      "durations": {
+        "created_to_terminal_ms": 53.076
+      },
+      "report_verified": false,
+      "consistency_passed": true
+    },
+    {
+      "label": "run-12",
+      "action": "cancel",
+      "status": "cancelled",
+      "provider_calls": 0,
+      "created_status": "queued",
+      "decision_responses": [],
+      "transitions": [
+        "cancelled"
+      ],
+      "event_counts": {
+        "run.cancelled": 1,
+        "run.created": 1,
+        "run.status": 1
+      },
+      "memory_count": 0,
+      "phases": {},
+      "durations": {
+        "created_to_terminal_ms": 173.14
+      },
+      "report_verified": false,
+      "consistency_passed": true
+    }
+  ],
+  "http_requests": [
+    {
+      "label": "instance",
+      "action": "startup-health",
+      "method": "GET",
+      "endpoint": "/api/health",
+      "started_ms": 344.0,
+      "status": 200,
+      "duration_ms": 1937.0
+    },
+    {
+      "label": "instance",
+      "action": "/api/metrics",
+      "method": "GET",
+      "endpoint": "/api/metrics",
+      "started_ms": 2281.0,
+      "status": 200,
+      "duration_ms": 47.0
+    },
+    {
+      "label": "instance",
+      "action": "seed-demo",
+      "method": "POST",
+      "endpoint": "/api/demo",
+      "started_ms": 2328.0,
+      "status": 201,
+      "duration_ms": 63.0
+    },
+    {
+      "label": "run-02",
+      "action": "create",
+      "method": "POST",
+      "endpoint": "/api/runs",
+      "started_ms": 2406.0,
+      "status": 201,
+      "duration_ms": 110.0
+    },
+    {
+      "label": "run-03",
+      "action": "create",
+      "method": "POST",
+      "endpoint": "/api/runs",
+      "started_ms": 2422.0,
+      "status": 201,
+      "duration_ms": 94.0
+    },
+    {
+      "label": "run-04",
+      "action": "create",
+      "method": "POST",
+      "endpoint": "/api/runs",
+      "started_ms": 2485.0,
+      "status": 201,
+      "duration_ms": 390.0
+    },
+    {
+      "label": "run-05",
+      "action": "create",
+      "method": "POST",
+      "endpoint": "/api/runs",
+      "started_ms": 2516.0,
+      "status": 201,
+      "duration_ms": 625.0
+    },
+    {
+      "label": "run-06",
+      "action": "create",
+      "method": "POST",
+      "endpoint": "/api/runs",
+      "started_ms": 2531.0,
+      "status": 201,
+      "duration_ms": 485.0
+    },
+    {
+      "label": "run-07",
+      "action": "create",
+      "method": "POST",
+      "endpoint": "/api/runs",
+      "started_ms": 2547.0,
+      "status": 201,
+      "duration_ms": 469.0
+    },
+    {
+      "label": "run-08",
+      "action": "create",
+      "method": "POST",
+      "endpoint": "/api/runs",
+      "started_ms": 2578.0,
+      "status": 201,
+      "duration_ms": 469.0
+    },
+    {
+      "label": "run-09",
+      "action": "create",
+      "method": "POST",
+      "endpoint": "/api/runs",
+      "started_ms": 2625.0,
+      "status": 201,
+      "duration_ms": 375.0
+    },
+    {
+      "label": "run-10",
+      "action": "create",
+      "method": "POST",
+      "endpoint": "/api/runs",
+      "started_ms": 2656.0,
+      "status": 201,
+      "duration_ms": 297.0
+    },
+    {
+      "label": "run-11",
+      "action": "create",
+      "method": "POST",
+      "endpoint": "/api/runs",
+      "started_ms": 2703.0,
+      "status": 201,
+      "duration_ms": 172.0
+    },
+    {
+      "label": "run-12",
+      "action": "create",
+      "method": "POST",
+      "endpoint": "/api/runs",
+      "started_ms": 2735.0,
+      "status": 201,
+      "duration_ms": 187.0
+    },
+    {
+      "label": "run-11",
+      "action": "cancel",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/cancel",
+      "started_ms": 2875.0,
+      "status": 200,
+      "duration_ms": 63.0
+    },
+    {
+      "label": "run-12",
+      "action": "cancel",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/cancel",
+      "started_ms": 2922.0,
+      "status": 200,
+      "duration_ms": 141.0
+    },
+    {
+      "label": "run-11",
+      "action": "repeat-cancel",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/cancel",
+      "started_ms": 2938.0,
+      "status": 200,
+      "duration_ms": 62.0
+    },
+    {
+      "label": "run-10",
+      "action": "cancel",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/cancel",
+      "started_ms": 2953.0,
+      "status": 200,
+      "duration_ms": 78.0
+    },
+    {
+      "label": "run-10",
+      "action": "repeat-cancel",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/cancel",
+      "started_ms": 3031.0,
+      "status": 200,
+      "duration_ms": 32.0
+    },
+    {
+      "label": "run-12",
+      "action": "repeat-cancel",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/cancel",
+      "started_ms": 3063.0,
+      "status": 200,
+      "duration_ms": 78.0
+    },
+    {
+      "label": "run-01",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 3156.0,
+      "status": 200,
+      "duration_ms": 469.0
+    },
+    {
+      "label": "run-02",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 3235.0,
+      "status": 200,
+      "duration_ms": 312.0
+    },
+    {
+      "label": "run-04",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 3266.0,
+      "status": 200,
+      "duration_ms": 312.0
+    },
+    {
+      "label": "run-03",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 3266.0,
+      "status": 200,
+      "duration_ms": 312.0
+    },
+    {
+      "label": "run-05",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 3313.0,
+      "status": 200,
+      "duration_ms": 312.0
+    },
+    {
+      "label": "run-06",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 3391.0,
+      "status": 200,
+      "duration_ms": 234.0
+    },
+    {
+      "label": "run-07",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 3422.0,
+      "status": 200,
+      "duration_ms": 156.0
+    },
+    {
+      "label": "run-08",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 3438.0,
+      "status": 200,
+      "duration_ms": 140.0
+    },
+    {
+      "label": "run-09",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 3516.0,
+      "status": 200,
+      "duration_ms": 125.0
+    },
+    {
+      "label": "run-10",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 3547.0,
+      "status": 200,
+      "duration_ms": 94.0
+    },
+    {
+      "label": "run-11",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 3578.0,
+      "status": 200,
+      "duration_ms": 63.0
+    },
+    {
+      "label": "run-12",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 3578.0,
+      "status": 200,
+      "duration_ms": 78.0
+    },
+    {
+      "label": "run-01",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 3766.0,
+      "status": 200,
+      "duration_ms": 109.0
+    },
+    {
+      "label": "run-02",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 3844.0,
+      "status": 200,
+      "duration_ms": 94.0
+    },
+    {
+      "label": "run-03",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 3875.0,
+      "status": 200,
+      "duration_ms": 47.0
+    },
+    {
+      "label": "run-05",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 3922.0,
+      "status": 200,
+      "duration_ms": 375.0
+    },
+    {
+      "label": "run-04",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 3922.0,
+      "status": 200,
+      "duration_ms": 375.0
+    },
+    {
+      "label": "run-06",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 3938.0,
+      "status": 200,
+      "duration_ms": 359.0
+    },
+    {
+      "label": "run-07",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 4016.0,
+      "status": 200,
+      "duration_ms": 234.0
+    },
+    {
+      "label": "run-08",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 4047.0,
+      "status": 200,
+      "duration_ms": 266.0
+    },
+    {
+      "label": "run-09",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 4078.0,
+      "status": 200,
+      "duration_ms": 172.0
+    },
+    {
+      "label": "run-02",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 4422.0,
+      "status": 200,
+      "duration_ms": 219.0
+    },
+    {
+      "label": "run-03",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 4469.0,
+      "status": 200,
+      "duration_ms": 203.0
+    },
+    {
+      "label": "run-04",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 4516.0,
+      "status": 200,
+      "duration_ms": 140.0
+    },
+    {
+      "label": "run-05",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 4547.0,
+      "status": 200,
+      "duration_ms": 172.0
+    },
+    {
+      "label": "run-06",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 4578.0,
+      "status": 200,
+      "duration_ms": 141.0
+    },
+    {
+      "label": "run-07",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 4594.0,
+      "status": 200,
+      "duration_ms": 125.0
+    },
+    {
+      "label": "run-08",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 4641.0,
+      "status": 200,
+      "duration_ms": 78.0
+    },
+    {
+      "label": "run-09",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 4672.0,
+      "status": 200,
+      "duration_ms": 47.0
+    },
+    {
+      "label": "run-04",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 4844.0,
+      "status": 200,
+      "duration_ms": 359.0
+    },
+    {
+      "label": "run-05",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 4860.0,
+      "status": 200,
+      "duration_ms": 265.0
+    },
+    {
+      "label": "run-06",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 4922.0,
+      "status": 200,
+      "duration_ms": 281.0
+    },
+    {
+      "label": "run-07",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 5016.0,
+      "status": 200,
+      "duration_ms": 109.0
+    },
+    {
+      "label": "run-08",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 5078.0,
+      "status": 200,
+      "duration_ms": 172.0
+    },
+    {
+      "label": "run-09",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 5125.0,
+      "status": 200,
+      "duration_ms": 125.0
+    },
+    {
+      "label": "run-05",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 5406.0,
+      "status": 200,
+      "duration_ms": 204.0
+    },
+    {
+      "label": "run-07",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 5500.0,
+      "status": 200,
+      "duration_ms": 172.0
+    },
+    {
+      "label": "run-06",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 5500.0,
+      "status": 200,
+      "duration_ms": 172.0
+    },
+    {
+      "label": "run-08",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 5547.0,
+      "status": 200,
+      "duration_ms": 78.0
+    },
+    {
+      "label": "run-05",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 5813.0,
+      "status": 200,
+      "duration_ms": 47.0
+    },
+    {
+      "label": "run-08",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 5828.0,
+      "status": 200,
+      "duration_ms": 32.0
+    },
+    {
+      "label": "run-05",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 5969.0,
+      "status": 200,
+      "duration_ms": 31.0
+    },
+    {
+      "label": "run-01",
+      "action": "preapproval-events",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}/events",
+      "started_ms": 6000.0,
+      "status": 200,
+      "duration_ms": 31.0
+    },
+    {
+      "label": "run-01",
+      "action": "wrong-digest",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/approve",
+      "started_ms": 6031.0,
+      "status": 409,
+      "duration_ms": 63.0
+    },
+    {
+      "label": "run-01",
+      "action": "after-wrong-digest",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 6094.0,
+      "status": 200,
+      "duration_ms": 31.0
+    },
+    {
+      "label": "run-02",
+      "action": "preapproval-events",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}/events",
+      "started_ms": 6125.0,
+      "status": 200,
+      "duration_ms": 47.0
+    },
+    {
+      "label": "run-02",
+      "action": "wrong-digest",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/approve",
+      "started_ms": 6172.0,
+      "status": 409,
+      "duration_ms": 31.0
+    },
+    {
+      "label": "run-02",
+      "action": "after-wrong-digest",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 6203.0,
+      "status": 200,
+      "duration_ms": 47.0
+    },
+    {
+      "label": "run-03",
+      "action": "preapproval-events",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}/events",
+      "started_ms": 6250.0,
+      "status": 200,
+      "duration_ms": 31.0
+    },
+    {
+      "label": "run-03",
+      "action": "wrong-digest",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/approve",
+      "started_ms": 6281.0,
+      "status": 409,
+      "duration_ms": 94.0
+    },
+    {
+      "label": "run-03",
+      "action": "after-wrong-digest",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 6375.0,
+      "status": 200,
+      "duration_ms": 31.0
+    },
+    {
+      "label": "run-04",
+      "action": "preapproval-events",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}/events",
+      "started_ms": 6406.0,
+      "status": 200,
+      "duration_ms": 32.0
+    },
+    {
+      "label": "run-04",
+      "action": "wrong-digest",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/approve",
+      "started_ms": 6438.0,
+      "status": 409,
+      "duration_ms": 47.0
+    },
+    {
+      "label": "run-04",
+      "action": "after-wrong-digest",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 6485.0,
+      "status": 200,
+      "duration_ms": 31.0
+    },
+    {
+      "label": "run-05",
+      "action": "preapproval-events",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}/events",
+      "started_ms": 6516.0,
+      "status": 200,
+      "duration_ms": 31.0
+    },
+    {
+      "label": "run-05",
+      "action": "wrong-digest",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/approve",
+      "started_ms": 6547.0,
+      "status": 409,
+      "duration_ms": 31.0
+    },
+    {
+      "label": "run-05",
+      "action": "after-wrong-digest",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 6578.0,
+      "status": 200,
+      "duration_ms": 32.0
+    },
+    {
+      "label": "run-06",
+      "action": "preapproval-events",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}/events",
+      "started_ms": 6610.0,
+      "status": 200,
+      "duration_ms": 46.0
+    },
+    {
+      "label": "run-06",
+      "action": "wrong-digest",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/approve",
+      "started_ms": 6656.0,
+      "status": 409,
+      "duration_ms": 32.0
+    },
+    {
+      "label": "run-06",
+      "action": "after-wrong-digest",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 6688.0,
+      "status": 200,
+      "duration_ms": 31.0
+    },
+    {
+      "label": "run-07",
+      "action": "preapproval-events",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}/events",
+      "started_ms": 6719.0,
+      "status": 200,
+      "duration_ms": 31.0
+    },
+    {
+      "label": "run-07",
+      "action": "wrong-digest",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/approve",
+      "started_ms": 6750.0,
+      "status": 409,
+      "duration_ms": 63.0
+    },
+    {
+      "label": "run-07",
+      "action": "after-wrong-digest",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 6813.0,
+      "status": 200,
+      "duration_ms": 31.0
+    },
+    {
+      "label": "run-08",
+      "action": "preapproval-events",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}/events",
+      "started_ms": 6844.0,
+      "status": 200,
+      "duration_ms": 47.0
+    },
+    {
+      "label": "run-08",
+      "action": "wrong-digest",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/approve",
+      "started_ms": 6891.0,
+      "status": 409,
+      "duration_ms": 31.0
+    },
+    {
+      "label": "run-08",
+      "action": "after-wrong-digest",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 6922.0,
+      "status": 200,
+      "duration_ms": 31.0
+    },
+    {
+      "label": "run-09",
+      "action": "preapproval-events",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}/events",
+      "started_ms": 6953.0,
+      "status": 200,
+      "duration_ms": 47.0
+    },
+    {
+      "label": "run-09",
+      "action": "wrong-digest",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/approve",
+      "started_ms": 7000.0,
+      "status": 409,
+      "duration_ms": 47.0
+    },
+    {
+      "label": "run-09",
+      "action": "after-wrong-digest",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 7047.0,
+      "status": 200,
+      "duration_ms": 31.0
+    },
+    {
+      "label": "run-01",
+      "action": "duplicate-approve",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/approve",
+      "started_ms": 7078.0,
+      "status": 200,
+      "duration_ms": 188.0
+    },
+    {
+      "label": "run-01",
+      "action": "duplicate-approve",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/approve",
+      "started_ms": 7094.0,
+      "status": 409,
+      "duration_ms": 203.0
+    },
+    {
+      "label": "run-02",
+      "action": "duplicate-approve",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/approve",
+      "started_ms": 7141.0,
+      "status": 200,
+      "duration_ms": 156.0
+    },
+    {
+      "label": "run-02",
+      "action": "duplicate-approve",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/approve",
+      "started_ms": 7172.0,
+      "status": 409,
+      "duration_ms": 125.0
+    },
+    {
+      "label": "run-03",
+      "action": "duplicate-approve",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/approve",
+      "started_ms": 7203.0,
+      "status": 200,
+      "duration_ms": 78.0
+    },
+    {
+      "label": "run-03",
+      "action": "duplicate-approve",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/approve",
+      "started_ms": 7219.0,
+      "status": 409,
+      "duration_ms": 344.0
+    },
+    {
+      "label": "run-04",
+      "action": "duplicate-approve",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/approve",
+      "started_ms": 7266.0,
+      "status": 200,
+      "duration_ms": 78.0
+    },
+    {
+      "label": "run-05",
+      "action": "duplicate-approve",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/approve",
+      "started_ms": 7297.0,
+      "status": 200,
+      "duration_ms": 94.0
+    },
+    {
+      "label": "run-04",
+      "action": "duplicate-approve",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/approve",
+      "started_ms": 7297.0,
+      "status": 409,
+      "duration_ms": 266.0
+    },
+    {
+      "label": "run-05",
+      "action": "duplicate-approve",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/approve",
+      "started_ms": 7360.0,
+      "status": 409,
+      "duration_ms": 140.0
+    },
+    {
+      "label": "run-06",
+      "action": "duplicate-approve",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/approve",
+      "started_ms": 7360.0,
+      "status": 409,
+      "duration_ms": 250.0
+    },
+    {
+      "label": "run-06",
+      "action": "duplicate-approve",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/approve",
+      "started_ms": 7391.0,
+      "status": 200,
+      "duration_ms": 203.0
+    },
+    {
+      "label": "run-07",
+      "action": "duplicate-reject",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/approve",
+      "started_ms": 7422.0,
+      "status": 409,
+      "duration_ms": 234.0
+    },
+    {
+      "label": "run-07",
+      "action": "duplicate-reject",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/approve",
+      "started_ms": 7438.0,
+      "status": 200,
+      "duration_ms": 109.0
+    },
+    {
+      "label": "run-08",
+      "action": "duplicate-reject",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/approve",
+      "started_ms": 7500.0,
+      "status": 409,
+      "duration_ms": 172.0
+    },
+    {
+      "label": "run-09",
+      "action": "duplicate-reject",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/approve",
+      "started_ms": 7531.0,
+      "status": 200,
+      "duration_ms": 79.0
+    },
+    {
+      "label": "run-08",
+      "action": "duplicate-reject",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/approve",
+      "started_ms": 7531.0,
+      "status": 200,
+      "duration_ms": 110.0
+    },
+    {
+      "label": "run-09",
+      "action": "duplicate-reject",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/approve",
+      "started_ms": 7563.0,
+      "status": 409,
+      "duration_ms": 78.0
+    },
+    {
+      "label": "run-01",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 7672.0,
+      "status": 200,
+      "duration_ms": 109.0
+    },
+    {
+      "label": "run-03",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 7719.0,
+      "status": 200,
+      "duration_ms": 187.0
+    },
+    {
+      "label": "run-02",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 7719.0,
+      "status": 200,
+      "duration_ms": 281.0
+    },
+    {
+      "label": "run-04",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 7735.0,
+      "status": 200,
+      "duration_ms": 171.0
+    },
+    {
+      "label": "run-05",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 7781.0,
+      "status": 200,
+      "duration_ms": 110.0
+    },
+    {
+      "label": "run-06",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 7828.0,
+      "status": 200,
+      "duration_ms": 78.0
+    },
+    {
+      "label": "run-07",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 7891.0,
+      "status": 200,
+      "duration_ms": 94.0
+    },
+    {
+      "label": "run-10",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 7922.0,
+      "status": 200,
+      "duration_ms": 109.0
+    },
+    {
+      "label": "run-08",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 7922.0,
+      "status": 200,
+      "duration_ms": 250.0
+    },
+    {
+      "label": "run-09",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 7922.0,
+      "status": 200,
+      "duration_ms": 250.0
+    },
+    {
+      "label": "run-11",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 7985.0,
+      "status": 200,
+      "duration_ms": 187.0
+    },
+    {
+      "label": "run-12",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 8000.0,
+      "status": 200,
+      "duration_ms": 172.0
+    },
+    {
+      "label": "run-01",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 8516.0,
+      "status": 200,
+      "duration_ms": 156.0
+    },
+    {
+      "label": "run-02",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 8610.0,
+      "status": 200,
+      "duration_ms": 93.0
+    },
+    {
+      "label": "run-03",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 8672.0,
+      "status": 200,
+      "duration_ms": 47.0
+    },
+    {
+      "label": "run-04",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 8750.0,
+      "status": 200,
+      "duration_ms": 78.0
+    },
+    {
+      "label": "run-05",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 8750.0,
+      "status": 200,
+      "duration_ms": 78.0
+    },
+    {
+      "label": "run-06",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 8781.0,
+      "status": 200,
+      "duration_ms": 47.0
+    },
+    {
+      "label": "run-01",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 9000.0,
+      "status": 200,
+      "duration_ms": 94.0
+    },
+    {
+      "label": "run-02",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 9063.0,
+      "status": 200,
+      "duration_ms": 62.0
+    },
+    {
+      "label": "run-03",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 9094.0,
+      "status": 200,
+      "duration_ms": 156.0
+    },
+    {
+      "label": "run-04",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 9125.0,
+      "status": 200,
+      "duration_ms": 125.0
+    },
+    {
+      "label": "run-05",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 9141.0,
+      "status": 200,
+      "duration_ms": 125.0
+    },
+    {
+      "label": "run-06",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 9188.0,
+      "status": 200,
+      "duration_ms": 93.0
+    },
+    {
+      "label": "run-01",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 9391.0,
+      "status": 200,
+      "duration_ms": 547.0
+    },
+    {
+      "label": "run-02",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 9422.0,
+      "status": 200,
+      "duration_ms": 438.0
+    },
+    {
+      "label": "run-03",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 9453.0,
+      "status": 200,
+      "duration_ms": 407.0
+    },
+    {
+      "label": "run-04",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 9500.0,
+      "status": 200,
+      "duration_ms": 360.0
+    },
+    {
+      "label": "run-05",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 9516.0,
+      "status": 200,
+      "duration_ms": 359.0
+    },
+    {
+      "label": "run-06",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 9547.0,
+      "status": 200,
+      "duration_ms": 328.0
+    },
+    {
+      "label": "run-01",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 10063.0,
+      "status": 200,
+      "duration_ms": 78.0
+    },
+    {
+      "label": "run-02",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 10110.0,
+      "status": 200,
+      "duration_ms": 62.0
+    },
+    {
+      "label": "run-03",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 10141.0,
+      "status": 200,
+      "duration_ms": 78.0
+    },
+    {
+      "label": "run-04",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 10188.0,
+      "status": 200,
+      "duration_ms": 109.0
+    },
+    {
+      "label": "run-05",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 10188.0,
+      "status": 200,
+      "duration_ms": 125.0
+    },
+    {
+      "label": "run-06",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 10219.0,
+      "status": 200,
+      "duration_ms": 78.0
+    },
+    {
+      "label": "run-01",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 10531.0,
+      "status": 200,
+      "duration_ms": 47.0
+    },
+    {
+      "label": "run-02",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 10578.0,
+      "status": 200,
+      "duration_ms": 32.0
+    },
+    {
+      "label": "run-03",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 10672.0,
+      "status": 200,
+      "duration_ms": 219.0
+    },
+    {
+      "label": "run-05",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 10672.0,
+      "status": 200,
+      "duration_ms": 234.0
+    },
+    {
+      "label": "run-04",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 10672.0,
+      "status": 200,
+      "duration_ms": 234.0
+    },
+    {
+      "label": "run-06",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 10844.0,
+      "status": 200,
+      "duration_ms": 47.0
+    },
+    {
+      "label": "run-01",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 11016.0,
+      "status": 200,
+      "duration_ms": 47.0
+    },
+    {
+      "label": "run-03",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 11063.0,
+      "status": 200,
+      "duration_ms": 109.0
+    },
+    {
+      "label": "run-04",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 11094.0,
+      "status": 200,
+      "duration_ms": 109.0
+    },
+    {
+      "label": "run-05",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 11172.0,
+      "status": 200,
+      "duration_ms": 31.0
+    },
+    {
+      "label": "run-06",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 11219.0,
+      "status": 200,
+      "duration_ms": 94.0
+    },
+    {
+      "label": "run-01",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 11500.0,
+      "status": 200,
+      "duration_ms": 78.0
+    },
+    {
+      "label": "run-03",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 11516.0,
+      "status": 200,
+      "duration_ms": 125.0
+    },
+    {
+      "label": "run-04",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 11578.0,
+      "status": 200,
+      "duration_ms": 94.0
+    },
+    {
+      "label": "run-06",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 11610.0,
+      "status": 200,
+      "duration_ms": 62.0
+    },
+    {
+      "label": "run-05",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 11610.0,
+      "status": 200,
+      "duration_ms": 62.0
+    },
+    {
+      "label": "run-03",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 11797.0,
+      "status": 200,
+      "duration_ms": 188.0
+    },
+    {
+      "label": "run-04",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 11860.0,
+      "status": 200,
+      "duration_ms": 31.0
+    },
+    {
+      "label": "run-05",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 11891.0,
+      "status": 200,
+      "duration_ms": 140.0
+    },
+    {
+      "label": "run-06",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 11922.0,
+      "status": 200,
+      "duration_ms": 47.0
+    },
+    {
+      "label": "run-03",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 12141.0,
+      "status": 200,
+      "duration_ms": 125.0
+    },
+    {
+      "label": "run-04",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 12203.0,
+      "status": 200,
+      "duration_ms": 94.0
+    },
+    {
+      "label": "run-05",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 12235.0,
+      "status": 200,
+      "duration_ms": 62.0
+    },
+    {
+      "label": "run-06",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 12266.0,
+      "status": 200,
+      "duration_ms": 31.0
+    },
+    {
+      "label": "run-03",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 12406.0,
+      "status": 200,
+      "duration_ms": 79.0
+    },
+    {
+      "label": "run-04",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 12438.0,
+      "status": 200,
+      "duration_ms": 78.0
+    },
+    {
+      "label": "run-05",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 12485.0,
+      "status": 200,
+      "duration_ms": 62.0
+    },
+    {
+      "label": "run-06",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 12485.0,
+      "status": 200,
+      "duration_ms": 62.0
+    },
+    {
+      "label": "run-04",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 12672.0,
+      "status": 200,
+      "duration_ms": 109.0
+    },
+    {
+      "label": "run-05",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 12703.0,
+      "status": 200,
+      "duration_ms": 110.0
+    },
+    {
+      "label": "run-06",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 12750.0,
+      "status": 200,
+      "duration_ms": 94.0
+    },
+    {
+      "label": "run-04",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 12969.0,
+      "status": 200,
+      "duration_ms": 141.0
+    },
+    {
+      "label": "run-05",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 12985.0,
+      "status": 200,
+      "duration_ms": 78.0
+    },
+    {
+      "label": "run-06",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 13031.0,
+      "status": 200,
+      "duration_ms": 141.0
+    },
+    {
+      "label": "run-04",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 13297.0,
+      "status": 200,
+      "duration_ms": 78.0
+    },
+    {
+      "label": "run-05",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 13313.0,
+      "status": 200,
+      "duration_ms": 78.0
+    },
+    {
+      "label": "run-06",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 13375.0,
+      "status": 200,
+      "duration_ms": 47.0
+    },
+    {
+      "label": "run-05",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 13531.0,
+      "status": 200,
+      "duration_ms": 79.0
+    },
+    {
+      "label": "run-06",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 13547.0,
+      "status": 200,
+      "duration_ms": 63.0
+    },
+    {
+      "label": "run-05",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 13719.0,
+      "status": 200,
+      "duration_ms": 62.0
+    },
+    {
+      "label": "run-05",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 13875.0,
+      "status": 200,
+      "duration_ms": 47.0
+    },
+    {
+      "label": "run-05",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 14031.0,
+      "status": 200,
+      "duration_ms": 63.0
+    },
+    {
+      "label": "run-05",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 14219.0,
+      "status": 200,
+      "duration_ms": 62.0
+    },
+    {
+      "label": "run-05",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 14375.0,
+      "status": 200,
+      "duration_ms": 47.0
+    },
+    {
+      "label": "run-05",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 14531.0,
+      "status": 200,
+      "duration_ms": 422.0
+    },
+    {
+      "label": "run-05",
+      "action": "poll",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 15063.0,
+      "status": 200,
+      "duration_ms": 47.0
+    },
+    {
+      "label": "run-01",
+      "action": "terminal-approval",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/approve",
+      "started_ms": 15110.0,
+      "status": 409,
+      "duration_ms": 46.0
+    },
+    {
+      "label": "run-02",
+      "action": "terminal-approval",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/approve",
+      "started_ms": 15156.0,
+      "status": 409,
+      "duration_ms": 63.0
+    },
+    {
+      "label": "run-03",
+      "action": "terminal-approval",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/approve",
+      "started_ms": 15219.0,
+      "status": 409,
+      "duration_ms": 31.0
+    },
+    {
+      "label": "run-04",
+      "action": "terminal-approval",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/approve",
+      "started_ms": 15250.0,
+      "status": 409,
+      "duration_ms": 31.0
+    },
+    {
+      "label": "run-11",
+      "action": "terminal-approval",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/approve",
+      "started_ms": 15281.0,
+      "status": 409,
+      "duration_ms": 32.0
+    },
+    {
+      "label": "run-12",
+      "action": "terminal-approval",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/approve",
+      "started_ms": 15313.0,
+      "status": 409,
+      "duration_ms": 47.0
+    },
+    {
+      "label": "run-10",
+      "action": "terminal-approval",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/approve",
+      "started_ms": 15360.0,
+      "status": 409,
+      "duration_ms": 46.0
+    },
+    {
+      "label": "run-09",
+      "action": "terminal-approval",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/approve",
+      "started_ms": 15406.0,
+      "status": 409,
+      "duration_ms": 32.0
+    },
+    {
+      "label": "run-06",
+      "action": "terminal-approval",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/approve",
+      "started_ms": 15438.0,
+      "status": 409,
+      "duration_ms": 78.0
+    },
+    {
+      "label": "run-07",
+      "action": "terminal-approval",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/approve",
+      "started_ms": 15516.0,
+      "status": 409,
+      "duration_ms": 31.0
+    },
+    {
+      "label": "run-08",
+      "action": "terminal-approval",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/approve",
+      "started_ms": 15547.0,
+      "status": 409,
+      "duration_ms": 31.0
+    },
+    {
+      "label": "run-05",
+      "action": "terminal-approval",
+      "method": "POST",
+      "endpoint": "/api/runs/{run}/approve",
+      "started_ms": 15578.0,
+      "status": 409,
+      "duration_ms": 47.0
+    },
+    {
+      "label": "instance",
+      "action": "audit-memories",
+      "method": "GET",
+      "endpoint": "/api/memories?project_id={project}",
+      "started_ms": 15625.0,
+      "status": 200,
+      "duration_ms": 31.0
+    },
+    {
+      "label": "run-01",
+      "action": "audit-run",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 15656.0,
+      "status": 200,
+      "duration_ms": 47.0
+    },
+    {
+      "label": "run-01",
+      "action": "audit-events",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}/events",
+      "started_ms": 15703.0,
+      "status": 200,
+      "duration_ms": 32.0
+    },
+    {
+      "label": "run-01",
+      "action": "audit-export",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}/report?format=json",
+      "started_ms": 15735.0,
+      "status": 200,
+      "duration_ms": 31.0
+    },
+    {
+      "label": "run-02",
+      "action": "audit-run",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 15766.0,
+      "status": 200,
+      "duration_ms": 47.0
+    },
+    {
+      "label": "run-02",
+      "action": "audit-events",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}/events",
+      "started_ms": 15813.0,
+      "status": 200,
+      "duration_ms": 31.0
+    },
+    {
+      "label": "run-02",
+      "action": "audit-export",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}/report?format=json",
+      "started_ms": 15844.0,
+      "status": 200,
+      "duration_ms": 31.0
+    },
+    {
+      "label": "run-03",
+      "action": "audit-run",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 15875.0,
+      "status": 200,
+      "duration_ms": 47.0
+    },
+    {
+      "label": "run-03",
+      "action": "audit-events",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}/events",
+      "started_ms": 15922.0,
+      "status": 200,
+      "duration_ms": 31.0
+    },
+    {
+      "label": "run-03",
+      "action": "audit-export",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}/report?format=json",
+      "started_ms": 15953.0,
+      "status": 200,
+      "duration_ms": 32.0
+    },
+    {
+      "label": "run-04",
+      "action": "audit-run",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 15985.0,
+      "status": 200,
+      "duration_ms": 46.0
+    },
+    {
+      "label": "run-04",
+      "action": "audit-events",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}/events",
+      "started_ms": 16031.0,
+      "status": 200,
+      "duration_ms": 16.0
+    },
+    {
+      "label": "run-04",
+      "action": "audit-export",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}/report?format=json",
+      "started_ms": 16047.0,
+      "status": 200,
+      "duration_ms": 47.0
+    },
+    {
+      "label": "run-05",
+      "action": "audit-run",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 16094.0,
+      "status": 200,
+      "duration_ms": 16.0
+    },
+    {
+      "label": "run-05",
+      "action": "audit-events",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}/events",
+      "started_ms": 16110.0,
+      "status": 200,
+      "duration_ms": 46.0
+    },
+    {
+      "label": "run-05",
+      "action": "audit-export",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}/report?format=json",
+      "started_ms": 16156.0,
+      "status": 200,
+      "duration_ms": 32.0
+    },
+    {
+      "label": "run-06",
+      "action": "audit-run",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 16188.0,
+      "status": 200,
+      "duration_ms": 31.0
+    },
+    {
+      "label": "run-06",
+      "action": "audit-events",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}/events",
+      "started_ms": 16219.0,
+      "status": 200,
+      "duration_ms": 31.0
+    },
+    {
+      "label": "run-06",
+      "action": "audit-export",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}/report?format=json",
+      "started_ms": 16250.0,
+      "status": 200,
+      "duration_ms": 47.0
+    },
+    {
+      "label": "run-07",
+      "action": "audit-run",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 16297.0,
+      "status": 200,
+      "duration_ms": 31.0
+    },
+    {
+      "label": "run-07",
+      "action": "audit-events",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}/events",
+      "started_ms": 16328.0,
+      "status": 200,
+      "duration_ms": 32.0
+    },
+    {
+      "label": "run-07",
+      "action": "audit-export",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}/report?format=json",
+      "started_ms": 16360.0,
+      "status": 200,
+      "duration_ms": 31.0
+    },
+    {
+      "label": "run-08",
+      "action": "audit-run",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 16391.0,
+      "status": 200,
+      "duration_ms": 31.0
+    },
+    {
+      "label": "run-08",
+      "action": "audit-events",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}/events",
+      "started_ms": 16422.0,
+      "status": 200,
+      "duration_ms": 31.0
+    },
+    {
+      "label": "run-08",
+      "action": "audit-export",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}/report?format=json",
+      "started_ms": 16453.0,
+      "status": 200,
+      "duration_ms": 32.0
+    },
+    {
+      "label": "run-09",
+      "action": "audit-run",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 16485.0,
+      "status": 200,
+      "duration_ms": 46.0
+    },
+    {
+      "label": "run-09",
+      "action": "audit-events",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}/events",
+      "started_ms": 16531.0,
+      "status": 200,
+      "duration_ms": 32.0
+    },
+    {
+      "label": "run-09",
+      "action": "audit-export",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}/report?format=json",
+      "started_ms": 16563.0,
+      "status": 200,
+      "duration_ms": 47.0
+    },
+    {
+      "label": "run-10",
+      "action": "audit-run",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 16610.0,
+      "status": 200,
+      "duration_ms": 46.0
+    },
+    {
+      "label": "run-10",
+      "action": "audit-events",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}/events",
+      "started_ms": 16656.0,
+      "status": 200,
+      "duration_ms": 32.0
+    },
+    {
+      "label": "run-10",
+      "action": "audit-export",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}/report?format=json",
+      "started_ms": 16688.0,
+      "status": 200,
+      "duration_ms": 31.0
+    },
+    {
+      "label": "run-11",
+      "action": "audit-run",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 16719.0,
+      "status": 200,
+      "duration_ms": 31.0
+    },
+    {
+      "label": "run-11",
+      "action": "audit-events",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}/events",
+      "started_ms": 16750.0,
+      "status": 200,
+      "duration_ms": 31.0
+    },
+    {
+      "label": "run-11",
+      "action": "audit-export",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}/report?format=json",
+      "started_ms": 16781.0,
+      "status": 200,
+      "duration_ms": 47.0
+    },
+    {
+      "label": "run-12",
+      "action": "audit-run",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}",
+      "started_ms": 16828.0,
+      "status": 200,
+      "duration_ms": 32.0
+    },
+    {
+      "label": "run-12",
+      "action": "audit-events",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}/events",
+      "started_ms": 16860.0,
+      "status": 200,
+      "duration_ms": 31.0
+    },
+    {
+      "label": "run-12",
+      "action": "audit-export",
+      "method": "GET",
+      "endpoint": "/api/runs/{run}/report?format=json",
+      "started_ms": 16891.0,
+      "status": 200,
+      "duration_ms": 47.0
+    },
+    {
+      "label": "instance",
+      "action": "audit-metrics",
+      "method": "GET",
+      "endpoint": "/api/metrics",
+      "started_ms": 16938.0,
+      "status": 200,
+      "duration_ms": 31.0
+    }
+  ],
+  "limitations": [
+    "Fixed synthetic replay; no model call or model quality measurement.",
+    "One local process with two durable worker loops; not a production capacity or endurance test.",
+    "Stage times use persisted wall-clock events; HTTP times use a monotonic clock.",
+    "Cancellation is requested immediately after creation; the exact pre-cancel stage is observed, not forced.",
+    "No credentials, source bodies, server logs, original paths, or raw API responses are exported."
+  ],
+  "fixture": {
+    "files": 3,
+    "before_sha256": "422db027903357ef9cc49c743dffa35f80ae62d1c9a2704d9d5f5069be2147cf",
+    "after_sha256": "422db027903357ef9cc49c743dffa35f80ae62d1c9a2704d9d5f5069be2147cf",
+    "source_unchanged": true
+  },
+  "startup_ms": 2281.0,
+  "metrics": {
+    "total_runs": 12,
+    "completed_runs": 6,
+    "verified_fixes": 6,
+    "failed_runs": 0,
+    "approval_pending": 0,
+    "provider_calls": 0,
+    "input_tokens": 0,
+    "output_tokens": 0
+  },
+  "queue": {
+    "job_count": 18,
+    "all_done": true,
+    "max_attempts": 1,
+    "observed_worker_owners": 2,
+    "peak_overlapping_verifications": 2
+  },
+  "run_progress": [
+    {
+      "label": "run-01",
+      "action": "approve",
+      "last_observed_status": "completed"
+    },
+    {
+      "label": "run-02",
+      "action": "approve",
+      "last_observed_status": "completed"
+    },
+    {
+      "label": "run-03",
+      "action": "approve",
+      "last_observed_status": "completed"
+    },
+    {
+      "label": "run-04",
+      "action": "approve",
+      "last_observed_status": "completed"
+    },
+    {
+      "label": "run-05",
+      "action": "approve",
+      "last_observed_status": "completed"
+    },
+    {
+      "label": "run-06",
+      "action": "approve",
+      "last_observed_status": "completed"
+    },
+    {
+      "label": "run-07",
+      "action": "reject",
+      "last_observed_status": "rejected"
+    },
+    {
+      "label": "run-08",
+      "action": "reject",
+      "last_observed_status": "rejected"
+    },
+    {
+      "label": "run-09",
+      "action": "reject",
+      "last_observed_status": "rejected"
+    },
+    {
+      "label": "run-10",
+      "action": "cancel",
+      "last_observed_status": "cancelled"
+    },
+    {
+      "label": "run-11",
+      "action": "cancel",
+      "last_observed_status": "cancelled"
+    },
+    {
+      "label": "run-12",
+      "action": "cancel",
+      "last_observed_status": "cancelled"
+    }
+  ],
+  "duration_ms": 18047.0,
+  "http_summary": {
+    "count": 239,
+    "completed_http_count": 239,
+    "by_endpoint": {
+      "GET /api/health": {
+        "count": 1,
+        "statuses": {
+          "200": 1
+        },
+        "min_ms": 1937.0,
+        "max_ms": 1937.0,
+        "mean_ms": 1937.0
+      },
+      "GET /api/metrics": {
+        "count": 2,
+        "statuses": {
+          "200": 2
+        },
+        "min_ms": 31.0,
+        "max_ms": 47.0,
+        "mean_ms": 39.0
+      },
+      "POST /api/demo": {
+        "count": 1,
+        "statuses": {
+          "201": 1
+        },
+        "min_ms": 63.0,
+        "max_ms": 63.0,
+        "mean_ms": 63.0
+      },
+      "POST /api/runs": {
+        "count": 11,
+        "statuses": {
+          "201": 11
+        },
+        "min_ms": 94.0,
+        "max_ms": 625.0,
+        "mean_ms": 333.909
+      },
+      "POST /api/runs/{run}/cancel": {
+        "count": 6,
+        "statuses": {
+          "200": 6
+        },
+        "min_ms": 32.0,
+        "max_ms": 141.0,
+        "mean_ms": 75.667
+      },
+      "GET /api/runs/{run}": {
+        "count": 145,
+        "statuses": {
+          "200": 145
+        },
+        "min_ms": 16.0,
+        "max_ms": 547.0,
+        "mean_ms": 131.51
+      },
+      "GET /api/runs/{run}/events": {
+        "count": 21,
+        "statuses": {
+          "200": 21
+        },
+        "min_ms": 16.0,
+        "max_ms": 47.0,
+        "mean_ms": 34.238
+      },
+      "POST /api/runs/{run}/approve": {
+        "count": 39,
+        "statuses": {
+          "409": 30,
+          "200": 9
+        },
+        "min_ms": 31.0,
+        "max_ms": 344.0,
+        "mean_ms": 99.0
+      },
+      "GET /api/memories?project_id={project}": {
+        "count": 1,
+        "statuses": {
+          "200": 1
+        },
+        "min_ms": 31.0,
+        "max_ms": 31.0,
+        "mean_ms": 31.0
+      },
+      "GET /api/runs/{run}/report?format=json": {
+        "count": 12,
+        "statuses": {
+          "200": 12
+        },
+        "min_ms": 31.0,
+        "max_ms": 47.0,
+        "mean_ms": 37.917
+      }
+    },
+    "p50_ms": 78.0,
+    "p95_ms": 375.0,
+    "quantile_method": "nearest-rank; HTTP responses only; expected 409 responses included"
+  }
+}

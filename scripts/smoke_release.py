@@ -19,7 +19,7 @@ import time
 from datetime import UTC, datetime
 from html.parser import HTMLParser
 from pathlib import Path
-from urllib.error import URLError
+from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit
 from urllib.request import HTTPRedirectHandler, ProxyHandler, Request, build_opener
 
@@ -140,10 +140,11 @@ class ReleaseSmoke:
         require(isinstance(value, dict), f'{name} did not return a JSON object')
         return value
 
-    def request(self, path: str, payload: dict | None = None, *, raw: bool = False):
+    def request(self, path: str, payload: dict | None = None, *, raw: bool = False, headers: dict | None = None):
         data = None if payload is None else json.dumps(payload).encode('utf-8')
         request = Request(self.base_url + path, data=data,
-                          headers={'Content-Type': 'application/json'} if data is not None else {})
+                          headers={**({'Content-Type': 'application/json'} if data is not None else {}),
+                                   **(headers or {})})
         with self.opener.open(request, timeout=self.remaining(3)) as response:
             body = response.read(2_000_001)
             require(len(body) <= 2_000_000, f'HTTP response too large: {path}')
@@ -181,6 +182,16 @@ class ReleaseSmoke:
                 else:
                     raise RuntimeError('Installed API did not become ready')
                 require(not health['provider']['configured'], 'Unexpected configured model provider')
+                cross_origin = f'http://127.0.0.1:{9999 if port != 9999 else 9998}'
+                blocked = Request(self.base_url + '/api/demo', method='POST', headers={'Origin': cross_origin})
+                try:
+                    with self.opener.open(blocked, timeout=self.remaining(3)):
+                        raise RuntimeError('Cross-origin request was allowed to create a demo')
+                except HTTPError as error:
+                    require(error.code == 403, 'Cross-origin request did not fail with 403')
+                    error.close()
+                require(self.request('/api/metrics')['total_runs'] == 0,
+                        'Rejected cross-origin request created a run')
                 html = self.request('/', raw=True)
                 require(b'TraceForge' in html and b'id="root"' in html, 'Workbench HTML missing')
                 parser = AssetParser()
@@ -201,7 +212,8 @@ class ReleaseSmoke:
                 events = self.request(f'/api/runs/{created["id"]}/events')
                 require(not any(event['kind'] == 'verification.started' for event in events),
                         'Verification ran before approval')
-                self.request(f'/api/runs/{created["id"]}/approve', {'decision': 'approve', 'patch_digest': digest})
+                self.request(f'/api/runs/{created["id"]}/approve', {'decision': 'approve', 'patch_digest': digest},
+                             headers={'Origin': self.base_url})
                 completed = self.poll(process, created['id'], 'completed')
                 verification = completed['state']['verification']
                 require(verification['regression_fixed'], 'Installed demo did not verify a regression fix')
@@ -230,6 +242,7 @@ class ReleaseSmoke:
                 return {'run_id': created['id'], 'mode': 'replay', 'status': completed['status'],
                         'approval_digest': digest, 'baseline': baseline['tests'], 'patched': patched['tests'],
                         'regression_fixed': True, 'provider_calls': metrics['provider_calls'], 'assets': assets,
+                        'origin_boundary': {'cross_origin_blocked': True, 'same_origin_approval': True},
                         'report_export': {'json': True, 'markdown': True, 'content_sha256': content_hash,
                                           'digest_verified': True}}
             finally:
@@ -273,6 +286,16 @@ def main() -> int:
             require(evaluation['kind'] == 'offline-harness', 'Evaluation label is not offline-harness')
             require(evaluation['passed_cases'] == evaluation['total_cases'] == 10, 'Evaluation did not pass 10/10')
             report['evaluation'] = {key: evaluation[key] for key in ('kind', 'passed_cases', 'total_cases')}
+            retrieval = smoke.json_command(['-m', 'traceforge', 'retrieval-evaluate'], 'retrieval-evaluation')
+            require(retrieval['kind'] == 'synthetic-retrieval-pilot' and retrieval['provider_calls'] == 0,
+                    'Retrieval pilot has an incorrect mode or provider accounting')
+            require(len(retrieval['cases']) == 10 and retrieval['corpus']['files'] == 33,
+                    'Retrieval pilot corpus or query count changed unexpectedly')
+            require(set(retrieval['methods']) == {'alphabetical', 'bm25', 'char', 'rrf'},
+                    'Retrieval pilot did not measure all four methods')
+            report['retrieval_evaluation'] = {key: retrieval[key] for key in
+                ('kind', 'provider_calls', 'queries_sha256', 'qrels_sha256', 'methods')}
+            report['retrieval_evaluation']['corpus_sha256'] = retrieval['corpus']['sha256']
             benchmark = smoke.json_command(['-m', 'traceforge', 'benchmark', '--mode', 'oracle',
                                             '--case', 'unit_conversion'], 'benchmark')
             metrics = benchmark['metrics']

@@ -13,7 +13,7 @@ from .config import DEMO_ROOT
 from .connectors import collect_git_evidence, collect_github_evidence
 from .models import Diagnosis
 from .provider import OpenAIProvider, ProviderError
-from .retrieval import RepositoryIndex, redact
+from .retrieval import RepositoryIndex, redact, safe_path
 from .runner import VerificationCancelled, repository_manifest, run_verification, validate_patch
 from .store import LeaseLostError, patch_digest
 
@@ -37,6 +37,12 @@ user-facing explanations. Do not output private chain-of-thought; tools and conc
 
 def _json(value) -> str:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(',', ':'))
+
+
+class EvidenceVersionError(RuntimeError):
+    """A repository observation no longer belongs to this investigation revision."""
+
+    fault_type = 'source_changed'
 
 
 class Engine:
@@ -107,14 +113,16 @@ class Engine:
                 if self._cancelled(run_id):
                     return
                 manifest = await asyncio.to_thread(repository_manifest, root, self.settings)
-                if state.get('source_manifest') and state['source_manifest'] != manifest:
-                    raise ValueError('恢复调查时仓库已改变；请重新创建调查')
+                if 'source_manifest' in state and state['source_manifest'] != manifest:
+                    raise EvidenceVersionError('恢复调查时仓库已改变；请重新创建调查')
                 self.store.update_run(run_id, state={'source_manifest': manifest})
                 if state.get('evidence'):
                     evidence = {item['id']: item for item in state['evidence']}
                 else:
                     evidence = await self._collect(run, project, index)
+                    self._require_evidence_versions(evidence.values(), manifest, root)
                     self._checkpoint(run_id, 'retrieved', evidence=list(evidence.values()))
+                self._require_evidence_versions(evidence.values(), manifest, root)
                 if self._cancelled(run_id):
                     return
                 if run['mode'] == 'live':
@@ -130,10 +138,10 @@ class Engine:
                 if self._cancelled(run_id):
                     return
                 seen = set(self.store.get_run(run_id)['state'].get('seen_evidence_ids', [])) if run['mode'] == 'live' else None
-                diagnosis = self._validate(diagnosis, evidence, root, visible_ids=seen)
+                diagnosis = self._validate(diagnosis, evidence, root, visible_ids=seen, source_manifest=manifest)
                 current_manifest = await asyncio.to_thread(repository_manifest, root, self.settings)
                 if current_manifest != manifest:
-                    raise ValueError('调查期间仓库已改变；请重新创建调查')
+                    raise EvidenceVersionError('调查期间仓库已改变；请重新创建调查')
                 digest = patch_digest(diagnosis['patches'])
                 self.store.add_event(run_id, 'diagnosis.ready', {
                     'summary': diagnosis['summary'], 'patch_count': len(diagnosis['patches']),
@@ -161,11 +169,19 @@ class Engine:
                    'source': 'submitted_symptom', 'path': 'incident.txt', 'line_start': 1,
                    'line_end': len(content.splitlines()) or 1, 'content': content, 'score': 1.0,
                    'kind': 'log', 'sha256': hashlib.sha256(content.encode()).hexdigest()}
-        def logs():
-            return [symptom, *(item for item in index.search(query, limit=8)
+        # Code and log views use the same ranked observation. A second identical
+        # query would reread every file, serialize on the index lock, and could
+        # observe a different source revision within this collection phase.
+        search = asyncio.create_task(asyncio.to_thread(index.search, query, limit=8))
+        async def logs():
+            try:
+                found = await search
+            except Exception:  # noqa: BLE001 - the code collector records the same failure
+                found = []
+            return [symptom, *(item for item in found
                                if item.get('kind') == 'log' or item.get('path', '').endswith('.log'))]
-        jobs = [('code', asyncio.to_thread(index.search, query, limit=8)),
-                ('logs', asyncio.to_thread(logs)),
+        jobs = [('code', search),
+                ('logs', logs()),
                 ('git', asyncio.to_thread(collect_git_evidence, Path(project['root']), query))]
         if project.get('github_repo'):
             jobs.append(('github', asyncio.to_thread(collect_github_evidence, project['github_repo'])))
@@ -219,7 +235,42 @@ class Engine:
                     'reason': '按单价乘数量累计，并保持空购物车为 Decimal 零。', 'evidence_ids': ids}]}
 
     @staticmethod
-    def _validate(candidate, evidence, root, *, visible_ids: set[str] | None = None) -> dict:
+    def _require_evidence_versions(items, manifest: dict[str, str], root: Path | None = None) -> None:
+        # Git history, issue metadata and submitted symptoms describe other
+        # sources. Only current repository observations bind to file bytes.
+        for item in items:
+            if item.get('source') != 'repository':
+                continue
+            path = item.get('path', '').replace('\\', '/')
+            if root is not None:
+                try:
+                    path = safe_path(root, path).relative_to(root.resolve()).as_posix()
+                except (OSError, ValueError):
+                    raise EvidenceVersionError('仓库证据路径已失效；请重新创建调查') from None
+            if path not in manifest or item.get('sha256') != manifest[path]:
+                raise EvidenceVersionError('仓库证据版本与调查开始时的文件清单不一致；请重新创建调查')
+
+    @staticmethod
+    def _require_message_versions(messages: list[dict], manifest: dict[str, str], root: Path) -> None:
+        # Legacy checkpoints can contain an older observation in a tool message
+        # even if a later read has replaced the same ID in the evidence catalog.
+        # Leave assistant reasoning/opaque continuation items untouched.
+        for message in messages:
+            if message.get('role') not in {'user', 'tool'}:
+                continue
+            try:
+                value = json.loads(message.get('content') or '')
+            except (TypeError, ValueError):
+                continue
+            if isinstance(value, dict) and isinstance(value.get('evidence'), list):
+                Engine._require_evidence_versions(
+                    [item for item in value['evidence'] if isinstance(item, dict)], manifest, root)
+
+    @staticmethod
+    def _validate(candidate, evidence, root, *, visible_ids: set[str] | None = None,
+                  source_manifest: dict[str, str] | None = None) -> dict:
+        if source_manifest is not None:
+            Engine._require_evidence_versions(evidence.values(), source_manifest, root)
         diagnosis = Diagnosis.model_validate(candidate, strict=True).model_dump()
         cited = set(diagnosis['evidence_ids'])
         if not cited.issubset(evidence):
@@ -233,7 +284,8 @@ class Engine:
             if visible_ids is not None and not patch_ids.issubset(visible_ids):
                 raise ValueError('补丁引用了模型尚未看到的证据 ID；请先使用 search 或 read')
             normalized = patch['path'].replace('\\', '/')
-            if not any(evidence[key].get('path', '').replace('\\', '/') == normalized for key in patch_ids):
+            if not any(evidence[key].get('source') == 'repository'
+                       and evidence[key].get('path', '').replace('\\', '/') == normalized for key in patch_ids):
                 raise ValueError('每个补丁必须引用目标文件的已检索证据')
             validate_patch(root, patch)
         return diagnosis
@@ -241,7 +293,7 @@ class Engine:
     @staticmethod
     def _model_evidence(item: dict, limit: int = 2400) -> dict:
         view = {key: value for key, value in item.items() if key in {
-            'id', 'source', 'path', 'line_start', 'line_end', 'kind', 'score', 'sha256', 'content'}}
+            'id', 'source', 'path', 'line_start', 'line_end', 'kind', 'score', 'sha256', 'content', 'partial_line'}}
         content = str(view.get('content', ''))
         if len(content) > limit:
             view['content'] = content[:limit] + '\n[完整证据已持久化；请使用 read 获取剩余内容]'
@@ -373,6 +425,7 @@ class Engine:
 
     async def _live(self, run_id, run, index, evidence, root, started) -> dict:
         state = self.store.get_run(run_id)['state']
+        manifest = state['source_manifest']
         messages = state.get('agent_messages')
         seen_ids = set(state.get('seen_evidence_ids', []))
         if not messages:
@@ -390,6 +443,7 @@ class Engine:
             remaining = self.settings.max_run_seconds - (time.time() - started)
             if remaining <= 0:
                 raise TimeoutError('模型运行超过时间预算')
+            self._require_message_versions(messages, manifest, root)
             messages = self._compact(run_id, messages, evidence, seen_ids)
             usage = self.store.get_run(run_id)['state'].get('usage', {})
             token_limit = getattr(self.settings, 'max_total_tokens', None)
@@ -435,7 +489,8 @@ class Engine:
                     if name == 'finish':
                         if call_index != len(reply['tool_calls']) - 1:
                             raise ValueError('finish 必须是响应中的最后一个工具调用')
-                        candidate = self._validate(arguments, evidence, root, visible_ids=seen_ids)
+                        candidate = self._validate(arguments, evidence, root, visible_ids=seen_ids,
+                                                   source_manifest=manifest)
                         self._checkpoint(run_id, 'diagnosed', evidence=list(evidence.values()),
                                          seen_evidence_ids=sorted(seen_ids))
                         return candidate
@@ -457,6 +512,7 @@ class Engine:
                         found = [await asyncio.to_thread(index.read, arguments['path'], start, end)]
                     else:
                         raise ValueError('工具不受支持')
+                    self._require_evidence_versions(found, manifest, root)
                     evidence.update({item['id']: item for item in found})
                     tool_budget = max(300, min(6000, (self.settings.max_context_chars
                         - len(SYSTEM_PROMPT) - len(run['query']) - 3000) // max(1, len(reply['tool_calls']))))
@@ -495,7 +551,8 @@ class Engine:
             root = self.settings.validate_root(project['root'])
             evidence = {item['id']: item for item in state.get('evidence', [])}
             self._validate(state['diagnosis'], evidence, root,
-                           visible_ids=set(state.get('seen_evidence_ids', [])) if run['mode'] == 'live' else None)
+                           visible_ids=set(state.get('seen_evidence_ids', [])) if run['mode'] == 'live' else None,
+                           source_manifest=state['source_manifest'])
             project = {**project, '_expected_manifest': state['source_manifest']}
             self._checkpoint(run_id, 'verifying')
             stop = threading.Event()

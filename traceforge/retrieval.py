@@ -13,8 +13,21 @@ import threading
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath, PureWindowsPath
+from typing import Literal
 
 MAX_CONTENT_CHARS = 8000
+MAX_CHUNK_CHARS = 6000
+MAX_CHUNK_LINES = 24
+LONG_LINE_OVERLAP = 256
+PARENT_CONTEXT_LINES = 12
+MAX_QUERY_CHARS = 12000
+MAX_SEARCH_RESULTS = 50
+CANDIDATE_LIMIT = 200
+RRF_K = 60
+BM25_K1 = 1.5
+BM25_B = 0.75
+CHAR_NGRAM_SIZES = (2, 3)
+RETRIEVAL_METHODS = ("bm25", "char", "rrf")
 DENIED_PARTS = frozenset({
     ".git", ".hg", ".svn", "node_modules", ".venv", "venv", "env", "__pycache__",
     "build", "dist", "target", "vendor", "coverage", ".coverage", ".next", ".nuxt",
@@ -66,7 +79,7 @@ def redact(text: str) -> str:
     )
     text = re.sub(r"(?i)\b(https?|postgres(?:ql)?|mysql|mongodb(?:\+srv)?|redis)://[^\s/@]+:[^\s/@]+@",
                   r"\1://[REDACTED]@", text)
-    text = re.sub(r"(?i)\b(Bearer|Basic)\s+[A-Za-z0-9_.~+/=-]+", r"\1 [REDACTED]", text)
+    text = re.sub(r"(?i)\b(Bearer|Basic)(\s+)[A-Za-z0-9_.~+/=-]+", r"\1\2[REDACTED]", text)
     text = _SECRET_VALUE.sub(_redact_assignment, text)
     text = re.sub(r"\b(?:gh[pousr]_[A-Za-z0-9_]{12,}|github_pat_[A-Za-z0-9_]{12,}|"
                   r"sk-(?:proj-)?[A-Za-z0-9_-]{12,}|AKIA[A-Z0-9]{16}|xox[baprs]-[A-Za-z0-9-]{10,})\b",
@@ -146,7 +159,7 @@ def _tokens(text: str) -> Counter:
 
 def _ngrams(text: str) -> Counter:
     value = re.sub(r"\s+", " ", text.casefold())
-    return Counter(value[i:i + n] for n in (2, 3) for i in range(len(value) - n + 1))
+    return Counter(value[i:i + n] for n in CHAR_NGRAM_SIZES for i in range(len(value) - n + 1))
 
 
 def make_evidence(source: str, path: str, content: str, *, line_start: int = 1,
@@ -170,6 +183,9 @@ class _Document:
     terms: Counter
     grams: Counter
     norm: float = 0
+    # Character offsets refer to the redacted single line, never source columns.
+    char_start: int | None = None
+    char_end: int | None = None
 
 
 @dataclass
@@ -177,6 +193,45 @@ class _File:
     digest: str
     lines: list[str]
     docs: list[_Document]
+
+
+def _redacted_lines(text: str) -> list[str]:
+    # Redact the complete input before slicing so a credential/private-key value
+    # cannot escape redaction when its prefix lies in another chunk or read range.
+    # Normalize original line boundaries first; redaction preserves these newlines.
+    return redact("\n".join(text.splitlines() or [""])).split("\n")
+
+
+def _chunk_documents(path: str, lines: list[str]) -> list[_Document]:
+    docs = []
+
+    def append(start: int, end: int, content: str, char_start: int | None = None,
+               char_end: int | None = None) -> None:
+        child = path + "\n" + content
+        docs.append(_Document(path, start, end, _tokens(child), _ngrams(child),
+                              char_start=char_start, char_end=char_end))
+
+    start, size = 0, 0
+    pending: list[str] = []
+    for number, line in enumerate(lines):
+        if pending and (len(pending) >= MAX_CHUNK_LINES or size + len(line) + 1 > MAX_CHUNK_CHARS):
+            append(start, number, "\n".join(pending))
+            pending, size = [], 0
+        if len(line) > MAX_CHUNK_CHARS:
+            # Overlap keeps short symbols spanning a boundary in a complete window.
+            for offset in range(0, len(line), MAX_CHUNK_CHARS - LONG_LINE_OVERLAP):
+                stop = min(offset + MAX_CHUNK_CHARS, len(line))
+                append(number, number + 1, line[offset:stop], offset, stop)
+                if stop == len(line):
+                    break
+            continue
+        if not pending:
+            start = number
+        size += len(line) + bool(pending)
+        pending.append(line)
+    if pending:
+        append(start, len(lines), "\n".join(pending))
+    return docs
 
 
 class RepositoryIndex:
@@ -254,13 +309,8 @@ class RepositoryIndex:
                         records[relative] = old
                         unchanged += 1
                         continue
-                    lines = text.splitlines() or [""]
-                    docs = []
-                    for start in range(0, len(lines), 24):
-                        end = min(start + 24, len(lines))
-                        # Bound work even for a log with a single enormous line.
-                        child = relative + "\n" + "\n".join(lines[start:end])[:6000]
-                        docs.append(_Document(relative, start, end, _tokens(child), _ngrams(child)))
+                    lines = _redacted_lines(text)
+                    docs = _chunk_documents(relative, lines)
                     records[relative] = _File(digest, lines, docs)
                     if old:
                         updated += 1
@@ -297,11 +347,16 @@ class RepositoryIndex:
         record = self._records[doc.path]
         lines = record.lines
         start, end = doc.start, doc.end
+        if doc.char_start is not None:
+            evidence = make_evidence("repository", doc.path, lines[start][doc.char_start:doc.char_end],
+                                     line_start=start + 1, line_end=end, score=score,
+                                     kind="log" if Path(doc.path).suffix.casefold() == ".log" else "code",
+                                     sha256=record.digest)
+            evidence["partial_line"] = True
+            return evidence
         # Prefer the matching child, then expand to its surrounding parent context.
-        while end > start + 1 and len("\n".join(lines[start:end])) > MAX_CONTENT_CHARS:
-            end -= 1
-        size = min(len("\n".join(lines[start:end])), MAX_CONTENT_CHARS)
-        for _ in range(12):
+        size = len("\n".join(lines[start:end]))
+        for _ in range(PARENT_CONTEXT_LINES):
             if start and size + len(lines[start - 1]) + 1 <= MAX_CONTENT_CHARS:
                 start -= 1
                 size += len(lines[start]) + 1
@@ -313,15 +368,20 @@ class RepositoryIndex:
                              kind="log" if Path(doc.path).suffix.casefold() == ".log" else "code",
                              sha256=record.digest)
 
-    def search(self, query: str, limit: int = 8) -> list[dict]:
-        query = str(query)[:12000]
-        limit = max(0, min(int(limit), 50))
+    def search(self, query: str, limit: int = 8, *,
+               method: Literal["bm25", "char", "rrf"] = "rrf") -> list[dict]:
+        """Retrieve with a selected lexical ranker and shared evidence boundaries."""
+        if method not in RETRIEVAL_METHODS:
+            raise ValueError("Unknown retrieval method; expected bm25, char, or rrf")
+        query = str(query)[:MAX_QUERY_CHARS]
+        limit = max(0, min(int(limit), MAX_SEARCH_RESULTS))
         if not query.strip() or not limit:
             return []
         with self._lock:
             # Each query refreshes real disk state so removed/replaced paths cannot leak stale evidence.
             self.build()
-            terms, grams = _tokens(query), _ngrams(query)
+            terms = _tokens(query) if method in {"bm25", "rrf"} else Counter()
+            grams = _ngrams(query) if method in {"char", "rrf"} else Counter()
             count = len(self._documents)
             query_weights = {gram: (1 + math.log(tf)) * self._idf(self._gram_df[gram], count)
                              for gram, tf in grams.items() if gram in self._gram_df}
@@ -335,7 +395,8 @@ class RepositoryIndex:
                     if tf:
                         df = self._term_df[term]
                         inverse = math.log(1 + (count - df + 0.5) / (df + 0.5))
-                        score += inverse * tf * 2.5 / (tf + 1.5 * (0.25 + 0.75 * length / max(1, self._avg_length)))
+                        score += inverse * tf * (BM25_K1 + 1) / (
+                            tf + BM25_K1 * (1 - BM25_B + BM25_B * length / max(1, self._avg_length)))
                 if score > 0:
                     bm25.append((position, score))
                 if query_norm and doc.norm:
@@ -343,20 +404,30 @@ class RepositoryIndex:
                               for gram, weight in query_weights.items() if gram in doc.grams)
                     if dot > 0:
                         cosine.append((position, dot / (query_norm * doc.norm)))
-            fused: Counter = Counter()
-            for ranking in (bm25, cosine):
-                for rank, (position, _) in enumerate(sorted(ranking, key=lambda item: (-item[1], item[0]))[:200], 1):
-                    fused[position] += 1 / (60 + rank)
-            results, ranges = [], []
-            for position, score in sorted(fused.items(), key=lambda item: (-item[1], item[0])):
+            rankings = {"bm25": sorted(bm25, key=lambda item: (-item[1], item[0]))[:CANDIDATE_LIMIT],
+                        "char": sorted(cosine, key=lambda item: (-item[1], item[0]))[:CANDIDATE_LIMIT]}
+            if method == "rrf":
+                fused: Counter = Counter()
+                for ranking in rankings.values():
+                    for rank, (position, _) in enumerate(ranking, 1):
+                        fused[position] += 1 / (RRF_K + rank)
+                ranking = sorted(fused.items(), key=lambda item: (-item[1], item[0]))
+            else:
+                ranking = rankings[method]
+            results, identities = [], set()
+            for position, score in ranking:
                 doc = self._documents[position]
                 evidence = self._evidence(doc, score)
-                # Neighbouring children often expand to the same context; avoid redundant citations.
-                if any(path == doc.path and abs(start - evidence["line_start"]) < 16
-                       for path, start in ranges):
+                # Suppress a child only when its complete range is already present.
+                # Nearby character-bounded chunks may contain different evidence.
+                if evidence["id"] in identities or any(
+                    previous["path"] == doc.path and not previous.get("partial_line")
+                    and previous["line_start"] <= doc.start + 1 and previous["line_end"] >= doc.end
+                    for previous in results
+                ):
                     continue
                 results.append(evidence)
-                ranges.append((doc.path, evidence["line_start"]))
+                identities.add(evidence["id"])
                 if len(results) >= limit:
                     break
             return results
@@ -364,11 +435,12 @@ class RepositoryIndex:
     def read(self, path: str, start: int = 1, end: int = 120) -> dict:
         with self._lock:
             # Validate direct reads independently of index membership.
-            loaded = self._load(str(path))
+            canonical = safe_path(self.root, str(path)).relative_to(self.root).as_posix()
+            loaded = self._load(canonical)
             if loaded is None:
                 raise ValueError("File is binary or exceeds the configured size limit")
             digest, text = loaded
-            lines = text.splitlines() or [""]
+            lines = _redacted_lines(text)
             start, end = int(start), int(end)
             if start < 1 or end < start or start > len(lines):
                 raise ValueError("Requested line range is invalid")
@@ -380,6 +452,9 @@ class RepositoryIndex:
                     break
                 selected.append(line[:MAX_CONTENT_CHARS])
                 size += len(selected[-1]) + 1
-            return make_evidence("repository", str(path).replace("\\", "/"), "\n".join(selected),
-                                 line_start=start, line_end=start + len(selected) - 1,
-                                 kind="log" if Path(path).suffix.casefold() == ".log" else "code", sha256=digest)
+            evidence = make_evidence("repository", canonical, "\n".join(selected),
+                                     line_start=start, line_end=start + len(selected) - 1,
+                                     kind="log" if Path(canonical).suffix.casefold() == ".log" else "code", sha256=digest)
+            if len(lines[start - 1]) > MAX_CONTENT_CHARS:
+                evidence["partial_line"] = True
+            return evidence

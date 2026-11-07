@@ -15,6 +15,8 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'pytest failed' }
     & $runtime -X utf8 -m traceforge evaluate
     if ($LASTEXITCODE -ne 0) { throw 'offline evaluation failed' }
+    & $runtime -X utf8 -m traceforge retrieval-evaluate
+    if ($LASTEXITCODE -ne 0) { throw 'retrieval evaluation failed' }
     & $runtime -X utf8 -m traceforge benchmark --mode oracle
     if ($LASTEXITCODE -ne 0) { throw 'oracle benchmark failed' }
     Set-Location -LiteralPath (Join-Path $taskRoot 'web')

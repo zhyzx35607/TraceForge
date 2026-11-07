@@ -1,7 +1,7 @@
 {
   "kind": "installed-wheel-offline-acceptance",
   "status": "passed",
-  "checked_at": "2026-11-07T03:49:58.844570+00:00",
+  "checked_at": "2026-11-07T05:15:53.121620+00:00",
   "model_capability": "not_measured",
   "limitations": [
     "Replay and oracle only; this does not measure model repair ability or Docker isolation."
@@ -32,10 +32,10 @@
     "canaries_valid": true,
     "missing_resources": [],
     "resource_files": 81,
-    "resource_sha256": "92afd0b8ceadfb1a22b3ef349be60bfd37aae1d0d0155333f3507e1817f8f13d"
+    "resource_sha256": "62cba63c9665ff079e68079361ba40d38db50967ac351a3a18d0548159d30984"
   },
   "api": {
-    "run_id": "0f1227cfbf43476ebdce3f48c50b7227",
+    "run_id": "2caf29a0fd164dbfafd206c32bb2ec05",
     "mode": "replay",
     "status": "completed",
     "approval_digest": "94c8493118bc4355a64156ee4904fae7faf51bad2002ad60a2120949fdaffa80",
@@ -101,20 +101,24 @@
     "provider_calls": 0,
     "assets": [
       {
-        "path": "/assets/index-BJVm6ECM.js",
-        "bytes": 315978,
-        "sha256": "c00cff1562d447e315eebe0a09206a6c669d7369f293b68a108db54b574e5f39"
+        "path": "/assets/index-D0tauitr.js",
+        "bytes": 328919,
+        "sha256": "a86745ff39966ec74a340e3b597d3243a1ae1379503c1d0387cff2551870e41e"
       },
       {
-        "path": "/assets/index-Bnt15YJz.css",
-        "bytes": 75358,
-        "sha256": "e4e16b23c1ae88322cf4bf17db8f6f85d188243c7ce37878014db907067f3cf9"
+        "path": "/assets/index-SVd37wvi.css",
+        "bytes": 85656,
+        "sha256": "1f6affa3a116e2dbce38d1b6f19eff86cfc70f8f312316735d528fed707e60a1"
       }
     ],
+    "origin_boundary": {
+      "cross_origin_blocked": true,
+      "same_origin_approval": true
+    },
     "report_export": {
       "json": true,
       "markdown": true,
-      "content_sha256": "3676cc03bdaf4891b3221b2c4b970ff8c0a0590ffd397961834dfb80dec1f3ca",
+      "content_sha256": "7ef46eac0b9d19dbd8eccf52d670371b76e4fba17f18cf006cc4e8ab2a8398cd",
       "digest_verified": true
     }
   },
@@ -122,6 +126,163 @@
     "kind": "offline-harness",
     "passed_cases": 10,
     "total_cases": 10
+  },
+  "retrieval_evaluation": {
+    "kind": "synthetic-retrieval-pilot",
+    "provider_calls": 0,
+    "queries_sha256": "3127346865e3cec54f38ca8ae5baddf3d704d85030372788e096953834d72123",
+    "qrels_sha256": "033c3a194ee409c60b1e060b071c4e0a4c805017d880253cc80627eedece2d03",
+    "methods": {
+      "alphabetical": {
+        "query_count": 10,
+        "macro_recall_at_k": {
+          "1": 0.05,
+          "3": 0.1,
+          "5": 0.2,
+          "8": 0.3
+        },
+        "mrr": 0.17827482605945605,
+        "all_required_at_k": {
+          "1": {
+            "numerator": 0,
+            "denominator": 10,
+            "rate": 0.0
+          },
+          "3": {
+            "numerator": 1,
+            "denominator": 10,
+            "rate": 0.1
+          },
+          "5": {
+            "numerator": 2,
+            "denominator": 10,
+            "rate": 0.2
+          },
+          "8": {
+            "numerator": 3,
+            "denominator": 10,
+            "rate": 0.3
+          }
+        },
+        "timings_ms": {
+          "total": 0.0094,
+          "p50": 0.0008,
+          "p95": 0.0014
+        }
+      },
+      "bm25": {
+        "query_count": 10,
+        "macro_recall_at_k": {
+          "1": 0.15,
+          "3": 0.85,
+          "5": 0.9,
+          "8": 0.95
+        },
+        "mrr": 0.6333333333333333,
+        "all_required_at_k": {
+          "1": {
+            "numerator": 0,
+            "denominator": 10,
+            "rate": 0.0
+          },
+          "3": {
+            "numerator": 7,
+            "denominator": 10,
+            "rate": 0.7
+          },
+          "5": {
+            "numerator": 8,
+            "denominator": 10,
+            "rate": 0.8
+          },
+          "8": {
+            "numerator": 9,
+            "denominator": 10,
+            "rate": 0.9
+          }
+        },
+        "timings_ms": {
+          "total": 1164.2992,
+          "p50": 119.77510000000001,
+          "p95": 144.3774
+        }
+      },
+      "char": {
+        "query_count": 10,
+        "macro_recall_at_k": {
+          "1": 0.05,
+          "3": 0.7,
+          "5": 0.85,
+          "8": 1.0
+        },
+        "mrr": 0.5166666666666667,
+        "all_required_at_k": {
+          "1": {
+            "numerator": 0,
+            "denominator": 10,
+            "rate": 0.0
+          },
+          "3": {
+            "numerator": 4,
+            "denominator": 10,
+            "rate": 0.4
+          },
+          "5": {
+            "numerator": 7,
+            "denominator": 10,
+            "rate": 0.7
+          },
+          "8": {
+            "numerator": 10,
+            "denominator": 10,
+            "rate": 1.0
+          }
+        },
+        "timings_ms": {
+          "total": 1212.973,
+          "p50": 107.31129999999999,
+          "p95": 242.9385
+        }
+      },
+      "rrf": {
+        "query_count": 10,
+        "macro_recall_at_k": {
+          "1": 0.1,
+          "3": 0.75,
+          "5": 0.95,
+          "8": 1.0
+        },
+        "mrr": 0.5833333333333333,
+        "all_required_at_k": {
+          "1": {
+            "numerator": 0,
+            "denominator": 10,
+            "rate": 0.0
+          },
+          "3": {
+            "numerator": 5,
+            "denominator": 10,
+            "rate": 0.5
+          },
+          "5": {
+            "numerator": 9,
+            "denominator": 10,
+            "rate": 0.9
+          },
+          "8": {
+            "numerator": 10,
+            "denominator": 10,
+            "rate": 1.0
+          }
+        },
+        "timings_ms": {
+          "total": 1316.5429,
+          "p50": 119.9543,
+          "p95": 211.5644
+        }
+      }
+    },
+    "corpus_sha256": "005c45269a12bbc139ec9586d614644359bbb039ddfb966515cd174c2aa3be59"
   },
   "benchmark": {
     "mode": "oracle",
@@ -164,5 +325,5 @@
     }
   },
   "resources_unchanged": true,
-  "duration_ms": 16375
+  "duration_ms": 26125
 }

@@ -35,6 +35,8 @@ An expired heartbeat cannot renew its lease even before reassignment. Worker err
 
 ## Evidence and retrieval
 
+Current repository observations must match the fixed investigation manifest before entering model context. This is stronger than comparing only the manifests at the beginning and end: a file can change A → B → A while a tool captures B. Resumed user/tool messages are checked as well as the evidence catalog, because an older message may retain a previous hash under a reused evidence ID. Empty manifests are real revisions and cannot be replaced silently on recovery. Historical Git evidence and submitted symptoms have different provenance and are not compared as current file bytes.
+
 The index combines BM25 (identifiers/error strings) and character n-gram TF-IDF cosine (lexical variation), then RRF. The second channel is explicitly not a pretrained embedding model. Sources include path, line range, content and SHA256. File filtering, symlink rejection, containment checks and redaction are reused for direct reads. Git and GitHub connectors are read only and bounded.
 
 Git collection requires a standalone `.git` directory. A worktree root check alone does not constrain gitdir/commondir/alternates to that root: this was reproduced with separate synthetic repositories. Gitfiles, shared metadata pointers, links and special files are therefore rejected before invoking Git; this deliberately excludes linked worktrees and submodule history collection.
@@ -48,6 +50,8 @@ Approvals include the frozen patch digest. Source fingerprints prevent applying 
 Unittest/pytest are launched through a separate observer outside the source snapshot, with a read-only observer mount under Docker. Completion records include test identities and outcomes. Stdout summaries are not trusted as verification evidence: an implementation that prints an invented success summary and exits immediately yields no complete observer report. The observer shares a Python interpreter with the tests, so this is not cryptographic attestation against fully adversarial reflection or monkey-patching. Unsupported commands can execute but remain unverified.
 
 ## Evaluation boundary
+
+The separate lexical retrieval pilot merges the ten public workspaces into a 33-file corpus, removes the query text and labels from the index, and compares the production BM25, character TF-IDF, RRF and alphabetical baseline. It records corpus/query/qrel hashes and per-case rankings. In this small pilot RRF improves Top-8 coverage while BM25 ranks the first relevant result better; this does not justify a blanket claim that fusion is superior. See [the metric definitions and results](retrieval-evaluation.md).
 
 Offline harness cases use oracle candidates to test the verifier and policy layer. Their pass rate is not Agent repair accuracy. Actual provider runs report observed tool calls, token usage, outcome and limitations separately. Test data and provider responses must never be promoted into fabricated production adoption metrics.
 

@@ -6,6 +6,8 @@ Markdown 适合现场讲解或事故复盘，JSON 适合检查摘要与自动归
 
 本次浏览器实测下载的样例：[Markdown](evidence/sample-run-report.md)、[JSON](evidence/sample-run-report.json)。它们来自同一次固定样例回放，外部观察器记录 4 项失败 → 8 项通过；模型调用为 0。JSON 摘要已独立复算一致，见 [下载验收摘要](evidence/report-download.json)。
 
+新增来源核验后的 HTTP 验收样例见 [当前 Markdown](evidence/current-run-report.md) 和 [当前 JSON](evidence/current-run-report.json)，包含 `verification.provenance`；对应的[接口验收记录](evidence/api-smoke-final.json)保存了复算结果。
+
 ![实际报告下载与回归结果](screenshots/report-export.png)
 
 ## 包含哪些信息
@@ -24,7 +26,9 @@ Markdown 适合现场讲解或事故复盘，JSON 适合检查摘要与自动归
 
 离线回放会注明候选补丁来自固定样例；检索模式不会宣称模型确认根因；live 单次记录也不是模型准确率。未返回的 usage 不会被解释为零费用。
 
-“已验证修复”重新检查完整的回归证据、任务完成状态和审批绑定；仅有 `regression_fixed=true` 的旧记录不能绕过外部观察器检查。观察器与测试共享 Python 解释器这一限制仍明确保留。
+“已验证修复”重新检查完整的回归证据、任务完成状态和审批绑定；仅有 `regression_fixed=true` 的旧记录不能绕过外部观察器检查。还会核对持久化的调查与验证文件清单、仓库证据版本及诊断/补丁引用。旧记录缺少这些元数据时明确显示未证实，不能从当前磁盘反推历史状态。
+
+`verification.provenance` 包含两份文件清单的摘要、一致性与引用核验结果，不导出清单中的无关路径。超长单行证据保留 `partial_line`，Markdown 明示“部分行片段”。观察器与测试共享 Python 解释器这一限制仍明确保留。
 
 ## 一致性与校验
 

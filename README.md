@@ -8,7 +8,7 @@ TraceForge 是面向维护多个代码仓库的开发者的本地 Agent 工作�
 
 ![实际工作台：审批后的测试结果](docs/screenshots/verified-tests.jpg)
 
-本次已验证后端 **274 项通过**、Docker 中结算样例从 **4 项失败 → 8 项通过**，并通过 wheel 独立安装验收；真实模型服务生成仍受 403/429/超时阻塞，完整证据和限制见 [验收记录](docs/acceptance.md)。
+本次已验证后端 **455 项通过**、Docker 中结算样例从 **4 项失败 → 8 项通过**，并通过 wheel 独立安装验收；真实模型服务生成仍受 403/429/超时阻塞，完整证据和限制见 [验收记录](docs/acceptance.md)。
 
 ## 可以现场演示什么
 
@@ -82,7 +82,9 @@ $env:TRACEFORGE_API_STYLE = 'responses' # 或 chat
 
 “已验证修复”要求原测试确实失败、补丁后通过、测试身份集合不减少且原先执行的测试不被跳过。仓库外的观察器支持 `python -m unittest`、`python -m pytest` 和 `pytest` 命令；使用实际 runner/plugin 的结果生成独立完成报告，stdout 只用于展示。前后都通过、零测试通过、缺失观察报告或未知命令都不算已验证修复。
 
-观察器已阻断“打印假成功摘要后 `os._exit(0)`”的复现样例；它与被测 Python 代码仍处于同一解释器，不提供抵御任意反射/猴子补丁的密码学证明。测试也不保证覆盖全部缺陷，独立隐藏测试用于进一步检验过拟合。
+受支持测试命令采用有限参数解析：仓库内的绝对测试路径会映射到副本，越界路径、导入控制参数与不受支持的选项明确失败。pytest 配置中的源码路径应指向快照内相对目录；例如 `pythonpath = src`。观察器检查实际项目模块和测试定义来源，editable 安装导回原仓库时不会记作验证通过。第三方测试依赖需预装到验证环境。
+
+观察器已阻断“打印假成功摘要后 `os._exit(0)`”的复现样例；它与被测 Python 代码仍处于同一解释器，不提供抵御任意反射/猴子补丁的密码学证明。测试也不保证覆盖全部缺陷。普通仓库执行注册的测试命令；内置 benchmark 额外运行预设隐藏测试，用于进一步检验过拟合。
 
 成功记录可以保存为项目内的修复记忆，供人审阅。目前不自动注入旧记忆进行推理，避免把过期引用作为新任务证据。
 
@@ -91,6 +93,7 @@ $env:TRACEFORGE_API_STYLE = 'responses' # 或 chat
 ```powershell
 .venv\Scripts\python.exe -m pytest -q
 .venv\Scripts\python.exe -m traceforge evaluate
+.venv\Scripts\python.exe -m traceforge retrieval-evaluate
 .venv\Scripts\python.exe -m traceforge benchmark --mode oracle
 # 已配置可用模型且 Docker 就绪后，可先执行单个真实模型案例：
 .venv\Scripts\python.exe -m traceforge benchmark --mode live --case unit_conversion
@@ -120,6 +123,8 @@ flowchart LR
 
 检索采用 BM25 + 字符 n-gram TF-IDF cosine + RRF，明确属于词法混合检索，不冒充神经向量。独立取证任务并行执行；核心模型当前是单 Agent，不为增加名词而堆模型角色。
 
+检索消融使用 10 个问题、33 个公开文件，移除题面同文和隐藏答案，并加入字母排序对照。实测 RRF 的 Recall@8 为 1.00，BM25 为 0.95；BM25 的 MRR 更高（0.6333 对 0.5833）。这个小规模结果展示覆盖与前排排序的取舍，详见 [检索消融](docs/retrieval-evaluation.md)。
+
 SQLite 的事务与租约适用于单机多 worker。系统是可重入的至少一次处理：崩溃可能重复模型请求或验证副本；没有自动推送、部署或源仓库写入等外部副作用。尚未提供分布式队列、多租户 RBAC 或生产级集群部署。
 
 更多说明：
@@ -128,11 +133,14 @@ SQLite 的事务与租约适用于单机多 worker。系统是可重入的至少
 - [现有项目审计与选题依据](docs/project-audit.md)
 - [实测验收与未完成项](docs/acceptance.md)
 - [多故障基准口径](docs/benchmark.md)
+- [检索消融与逐案例排名](docs/retrieval-evaluation.md)
 - [面试讲解与追问](docs/interview-playbook.md)
+- [按一次调查读懂源码与动手练习](docs/code-tour.md)
 - [现场演示流程](docs/demo-script.md)
 - [接口与模块契约](docs/implementation-contract.md)
 - [发布包与独立安装验收](docs/release.md)
 - [调查报告格式与口径](docs/reports.md)
+- [本机并发一致性验收](docs/local-concurrency.md)
 - [配置模板](.env.example)
 
 ## 目录

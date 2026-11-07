@@ -6,25 +6,29 @@
 
 | 检查 | 实际结果 | 原始记录或复现入口 |
 | --- | --- | --- |
-| 完整后端测试 | **274 passed, 3 skipped**，86.69s；3 项因本机 symlink 创建权限跳过；实际 Windows junction 测试通过 | 本机 `.traceforge/acceptance/pytest-reports-final.txt`；`python -m pytest -q` |
+| 完整后端测试 | **455 passed, 3 skipped**，292.88s；3 项因本机 symlink 创建权限跳过；实际 Windows junction 测试通过 | 本机 `.traceforge/acceptance/pytest-boundaries-final.txt`；`python -m pytest -q -ra` |
 | Ruff | `All checks passed!` | `python -m ruff check traceforge tests` |
 | 锁定安装 | `uv sync --extra dev --locked` 成功 | `uv.lock`；跨磁盘安装使用 copy 回退，仅性能提示 |
-| 前端类型检查与构建 | 成功，1587 modules；JS gzip 95.43KB | `npm run build`；不等同于浏览器性能评分 |
+| 前端类型检查与构建 | 成功，1589 modules；JS gzip 99.43KB | `npm run build`；不等同于浏览器性能评分 |
 | wheel / sdist 内容 | 前端、结算样例、十个基准共 81 个资源；与源码逐文件 SHA256 一致 | `uv build`；已独立只读核查产物 |
-| wheel 独立安装 | 空工作目录、独立 venv、Python `-I`；实际 HTML/JS/CSS 可用；摘要审批后 8 项中 4 失败 → 8 项全通过；两种报告导出与摘要复算通过；安装资源不变；evaluate 10/10，unit_conversion oracle 1/1 | [可携带报告](evidence/installed-release.json)；本机 `.traceforge/releases/5cb09905cf7b461397a65085ebba8f6e/report.json`；16.375s，0 模型调用 |
-| 一键发布与源码包复现 | `scripts/release.ps1 -SkipInstall` 实跑成功；98 个 wheel 包文件与当前源码一致；sdist 含前端源码/锁文件/文档/测试输入；解压后从解压源码导入，报告与路径测试 **42 passed** | 本机 `.traceforge/releases/5cb09905cf7b461397a65085ebba8f6e/`；[文件摘要](evidence/release-artifacts.json) |
+| wheel 独立安装 | 空工作目录、独立 venv、Python `-I`；实际 HTML/JS/CSS 可用；同源审批后 8 项中 4 失败 → 8 项全通过；跨源请求被拒；两种报告与来源核验通过；安装资源不变；evaluate 10/10、四路检索消融、unit_conversion oracle 1/1 | [可携带报告](evidence/installed-release.json)；本机 `.traceforge/releases/3cad3f59aff8473ba0301439c57d35e3/report.json`；26.125s，0 模型调用 |
+| 一键发布与源码包复现 | Windows PowerShell 5.1 中 `scripts/release.ps1 -SkipInstall` 实跑成功；应用文件与所验收安装包逐文件一致；sdist 含前端源码/锁文件/文档/测试输入 | 本机 `.traceforge/releases/3cad3f59aff8473ba0301439c57d35e3/`；逐文件数量与最终发行摘要见[构建证据](evidence/release-artifacts.json) |
 | 离线机制评测 | **10/10** | [可携带报告](evidence/offline-evaluation.json)，`traceforge evaluate` |
-| 多故障 Oracle | 修复 **7/7**，拒答 **3/3**，安全 **2/2**，初始检索路径覆盖 **10/10** | [可携带报告](evidence/oracle-benchmark.json)，session `20261107T024936Z-b0e64e03` |
+| 多故障 Oracle | 修复 **7/7**，拒答 **3/3**，安全 **2/2**，初始检索路径覆盖 **10/10**（仅为小工作区烟雾指标，不能代表排序质量） | [可携带报告](evidence/oracle-benchmark.json)，session `20261107T051326Z-457b7803` |
 | 模型功能正确率 | **未测，0/0**；Oracle provider calls=0、tokens=0 | 与上一行完全不同的分母 |
-| 真实 Docker 验证 | baseline exit 1，8 项中 4 失败；patched exit 0，8 项全过；两侧都有 `external_observer` 完成报告；源 SHA 不变 | [摘要](evidence/docker-validation.json)；本机 `.traceforge/docker-validation-v2/report.json`，run `360638965c3b46e28a1532980a231bbd` |
+| 真实 Docker 验证 | baseline exit 1，8 项中 4 失败；patched exit 0，8 项全过；两侧 `external_observer` 完整，导出报告来源核验通过；源 SHA 不变，24.110s | [摘要](evidence/docker-validation.json)；本机 `.traceforge/docker-boundary-validation-96ffd25ec021449a90479926beea9fa9/report.json`，run `d15e9f0ed7894268b2057364ddd6546d` |
 | 真正的服务进程重启 | 终止并重启 API，待审批记录与摘要保留；随后批准、执行并通过原测试 | `tests/test_process_recovery.py`，包含在完整测试中 |
 | 现有项目接入 | `report-workbench-agent` 27 个范围内文件，收集 10 条证据；文件 manifest 与 Git 状态均不变；0 模型调用 | [摘要](evidence/existing-repository.json)；只读 investigate，不声称根因确认 |
-| 最终服务 API smoke | run `6e49d2836f4a478fbbdfbfe8cf4c6b8f` 完成；修复前后观察报告完整、source=`external_observer` | 本机 `.traceforge/acceptance/api-smoke.json` |
+| 最终服务 API smoke | 重启到本版后 run `81ff0dabe1d24c668004604f6ce1aa07` 完成；修复前后观察报告完整，来源核验与导出摘要复算通过 | [API 验收](evidence/api-smoke-final.json)、[新版报告](evidence/current-run-report.md)；本机 `.traceforge/acceptance/api-smoke-final.json` |
 | 浏览器 | 审批、验证、记忆、运行对比、Benchmark 案例及筛选可操作；390px 无横向溢出；最终浏览器 warn/error 为空 | 本机 `.traceforge/screenshots/`；下方代表性截图 |
 | 调查报告导出 | 浏览器实际下载 Markdown 与 JSON；摘要独立复算一致；明确 replay、0 模型请求与 4 失败 → 8 通过；390px 无溢出 | [下载验收](evidence/report-download.json)、[报告样例](evidence/sample-run-report.md)、[JSON 样例](evidence/sample-run-report.json) |
+| 检索消融与界面 | 10 个问题、33 个公开文件；RRF Recall@8=1.00、BM25=0.95，MRR 则 BM25 更高；实际展开逐题排名，390px 无页面横溢，浏览器 warn/error 为空 | [原始评测](evidence/retrieval-ablation.json)、[浏览器验收](evidence/retrieval-browser.json)、[口径与限制](retrieval-evaluation.md) |
+| 本机并发一致性 | 12 条合成任务：6 批准、3 拒绝、3 取消；重复审批恰好一次生效；18 作业全部完成、最多尝试 1 次、两个 worker 的验证区间实际重叠；6 条记忆无重复，0 模型请求，18.047s | [完整报告](evidence/local-concurrency.json)、[复现与限制](local-concurrency.md)；239 个 HTTP 响应的 p95 为 375ms，仅这一轮本机小样本 |
 | GitHub CI | 已写工作流，**未推送，未运行云端 CI** | `.github/workflows/ci.yml` |
 
 TestClient 的完整测试输出有一条 Starlette/httpx 弃用提示，不影响当前通过结果；后续升级依赖时应处理，不能将它隐藏为零 warning。
+
+首次本轮完整执行为 454 passed、1 failed、3 skipped：pytest 观察器集成用例触发了其 5 秒测试上限，记录保留在本机 `.traceforge/acceptance/pytest-boundaries-first.txt`。随后使用相同 fixture 测量两种 pytest 入口，共 12 个前后测试阶段，实际耗时为 1.203–4.046 秒，均得到正确观察报告。仅把该结果正确性用例的上限调整为 15 秒；生产超时默认值未修改，0.15 秒超时终止用例仍通过。API 契约单元测试也隔离了本机 Docker 探测依赖；真实 Docker 验收单独执行。
 
 ## 审查发现并实际修复的问题
 
@@ -42,6 +46,12 @@ TestClient 的完整测试输出有一条 Starlette/httpx 弃用提示，不影�
 | 报告可能带出内部状态、把旧日志当验证结果或在 Markdown 中产生主动链接 | 白名单快照、不含源码/命令/原始日志；重新校验观察器与审批；Markdown 转义；独立审查使用真实解析器验证 9 类输入 |
 | 单独安装 wheel 缺少网页/样例/基准，并把状态放到安装目录 | 发行构建包含固定资源，运行状态使用用户数据目录；缺失前端构建时发行失败；独立安装完整演示实测通过 |
 | IPv6 Host 与非 ASCII Authorization | 合法 `[::1]` 接受；非法 Origin 与 Token 返回受控错误，不能触发 500 |
+| 另一个 localhost 端口可提交无正文 POST | 按协议、主机、有效端口严格同源；畸形和重复 Origin/Host 拒绝；CLI 无 Origin 与 Vite 保留 Host 的代理路径仍可用 |
+| 工具读到文件 B 后恢复为 A，前后清单都是 A | 每条当前仓库证据与固定版本逐项绑定；恢复消息、工具结果、诊断和补丁引用再次核验，不用前后清单相等掩盖瞬时版本变化 |
+| 长行与按行分块被 6000 字符截断 | 完整文本先脱敏再分片；超长单行使用重叠窗口，模型、界面和报告保留“部分行”标记 |
+| pytest 路径、已安装包或继承测试方法绕过快照 | 路径映射与有限参数解析；检查实际模块、测试方法和钩子来源；非 src 布局、嵌套配置、正常外部 decorator 与嵌套状态目录有对照回归 |
+| 导出旧状态中来源不一致的验证结果 | 重新检查调查/验证清单、证据版本、引用唯一性和补丁目标证据；缺少或冲突的数据明确标为未证实 |
+| Windows PowerShell 5.1 将构建进度当成失败、误解码中文脚本 | 对重定向的 uv 进度按实际退出码判定；含中文启动脚本保存 UTF-8 BOM；Windows 自带 PowerShell 实跑发布与重启均通过 |
 
 ## 真实模型路径的准确状态
 
@@ -55,6 +65,8 @@ TestClient 的完整测试输出有一条 Starlette/httpx 弃用提示，不影�
 
 在修复诊断工具后，**2026-11-07 11:22（上海）**再次执行一次有界最小生成：模型列表 HTTP 200，生成 HTTP 403，类别 `access_denied`。此次没有得到符合大小、编码和 JSON 约束的可展示错误字段，不能进一步断言是服务端哪个访问规则导致。见 [诊断记录](evidence/provider-diagnosis.json)。
 
+**2026-11-07 13:10（上海）**在停止所有子代理后独立重试：`gpt-6.1-sol` 的模型列表仍为 HTTP 200，最小 Responses 生成仍为 HTTP 403。最新版[诊断记录](evidence/provider-diagnosis.json)保留此次时间和实际时延；因此不能把当前缺口仅归因于本次子代理并发。
+
 ## 可复现范围与限制
 
 - 已提供包含前端/样例/基准的 wheel 和 sdist，并实测 Windows 独立安装；它们不包含 Python 解释器、Docker 或第三方 Python 依赖，不声称离线免安装。源码运行数据、私有仓库证据、原始本机路径和日志留在被忽略的 `.traceforge/`；wheel 默认使用用户数据目录。
@@ -66,7 +78,7 @@ TestClient 的完整测试输出有一条 Starlette/httpx 弃用提示，不影�
 
 ## 界面记录
 
-以下是本次真实浏览器验收保存的代表性截图，截图内运行时间与计数属于当时的记录；最终后端观察器验收以上表的 v2 报告为准。
+以下是本次真实浏览器验收保存的代表性截图，截图内运行时间与计数属于当时的记录；最终后端观察器验收以上表所列的 Docker 报告为准。
 
 ![修复前后测试结果](screenshots/verified-tests.jpg)
 

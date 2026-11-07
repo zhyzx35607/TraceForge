@@ -2,8 +2,8 @@
   "configured": true,
   "model": "gpt-6.1-sol",
   "api_style": "responses",
-  "host": "configured compatible provider",
-  "checked_at": "2026-11-07T03:22:23.390934+00:00",
+  "host": "api666.zzzcoding.org",
+  "checked_at": "2026-11-07T05:10:47.518279+00:00",
   "checks": [
     {
       "name": "models",
@@ -21,7 +21,7 @@
         "codex-auto-review"
       ],
       "selected_model_listed": true,
-      "latency_ms": 22703
+      "latency_ms": 2750
     },
     {
       "name": "minimal_generation",
@@ -32,7 +32,7 @@
       "upstream_type": null,
       "message": null,
       "action": "检查服务端分组、模型权限或网关访问规则；不会自动绕过访问限制。",
-      "latency_ms": 5437
+      "latency_ms": 1610
     }
   ]
 }

@@ -1,0 +1,77 @@
+{
+  "checked_at": "2026-11-07T05:18:37.884478+00:00",
+  "run_id": "81ff0dabe1d24c668004604f6ce1aa07",
+  "status": "passed",
+  "mode": "replay",
+  "provider_calls": 0,
+  "baseline": {
+    "completed": true,
+    "executed": 8,
+    "failed": 4,
+    "framework": "unittest",
+    "identities": [
+      "test_pricing.PricingTests.test_discount_applies_to_full_subtotal",
+      "test_pricing.PricingTests.test_empty_cart",
+      "test_pricing.PricingTests.test_invalid_discount",
+      "test_pricing.PricingTests.test_multiple_quantity",
+      "test_pricing.PricingTests.test_negative_quantity",
+      "test_pricing.PricingTests.test_single_item",
+      "test_pricing.PricingTests.test_two_lines",
+      "test_pricing.PricingTests.test_zero_quantity"
+    ],
+    "outcomes": {
+      "test_pricing.PricingTests.test_discount_applies_to_full_subtotal": "failed",
+      "test_pricing.PricingTests.test_empty_cart": "passed",
+      "test_pricing.PricingTests.test_invalid_discount": "passed",
+      "test_pricing.PricingTests.test_multiple_quantity": "failed",
+      "test_pricing.PricingTests.test_negative_quantity": "passed",
+      "test_pricing.PricingTests.test_single_item": "passed",
+      "test_pricing.PricingTests.test_two_lines": "failed",
+      "test_pricing.PricingTests.test_zero_quantity": "failed"
+    },
+    "passed": 4,
+    "skipped": 0,
+    "source": "external_observer"
+  },
+  "patched": {
+    "completed": true,
+    "executed": 8,
+    "failed": 0,
+    "framework": "unittest",
+    "identities": [
+      "test_pricing.PricingTests.test_discount_applies_to_full_subtotal",
+      "test_pricing.PricingTests.test_empty_cart",
+      "test_pricing.PricingTests.test_invalid_discount",
+      "test_pricing.PricingTests.test_multiple_quantity",
+      "test_pricing.PricingTests.test_negative_quantity",
+      "test_pricing.PricingTests.test_single_item",
+      "test_pricing.PricingTests.test_two_lines",
+      "test_pricing.PricingTests.test_zero_quantity"
+    ],
+    "outcomes": {
+      "test_pricing.PricingTests.test_discount_applies_to_full_subtotal": "passed",
+      "test_pricing.PricingTests.test_empty_cart": "passed",
+      "test_pricing.PricingTests.test_invalid_discount": "passed",
+      "test_pricing.PricingTests.test_multiple_quantity": "passed",
+      "test_pricing.PricingTests.test_negative_quantity": "passed",
+      "test_pricing.PricingTests.test_single_item": "passed",
+      "test_pricing.PricingTests.test_two_lines": "passed",
+      "test_pricing.PricingTests.test_zero_quantity": "passed"
+    },
+    "passed": 8,
+    "skipped": 0,
+    "source": "external_observer"
+  },
+  "provenance": {
+    "manifests_match": true,
+    "investigation_manifest_sha256": "42951b3dcc2cffd2e527c379b30b9a119c5140be54efbe67fc5636d961249d2d",
+    "verification_manifest_sha256": "42951b3dcc2cffd2e527c379b30b9a119c5140be54efbe67fc5636d961249d2d",
+    "investigation_file_count": 3,
+    "verification_file_count": 3,
+    "repository_evidence_matches": true,
+    "citations_valid": true,
+    "patch_targets_cited": true
+  },
+  "export_digest_verified": true,
+  "export_sha256": "99dd44add8d5bf88bbe9bfb1d55365856c3caced172f1d1a34adbc6d2e5851fe"
+}

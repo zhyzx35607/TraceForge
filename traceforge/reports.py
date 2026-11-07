@@ -6,6 +6,7 @@ import json
 import math
 import re
 from collections import Counter
+from pathlib import PurePosixPath, PureWindowsPath
 
 from .models import Patch
 from .retrieval import redact
@@ -13,6 +14,7 @@ from .runner import assess_regression
 from .store import patch_digest
 
 LIMITS = {'events': 1000, 'evidence': 100, 'patches': 10, 'citations': 30, 'limitations': 20}
+PROVENANCE_LIMIT = 10_000
 MODE_LABELS = {
     'replay': '离线固定样例回放：候选补丁来自已知样例，不代表模型诊断或修复能力。',
     'investigate': '仅检索调查：未调用模型形成根因结论，不代表已修复故障。',
@@ -120,8 +122,121 @@ def _phase(raw, clean: _Sanitizer) -> dict:
     }
 
 
-def _verified(run: dict, state: dict, verification: dict) -> tuple[bool, list[str]]:
+def _relative_path(value) -> str | None:
+    """Normalize persisted separators and dot segments without touching disk.
+
+    Case remains significant: a portable report cannot assume the source used
+    a case-insensitive filesystem, or resolve aliases against today's checkout.
+    """
+    if (not isinstance(value, str) or not value or len(value) > 4000
+            or '\x00' in value or ':' in value or PureWindowsPath(value).drive):
+        return None
+    path = PurePosixPath(value.replace('\\', '/'))
+    if path.is_absolute() or not path.parts or '..' in path.parts:
+        return None
+    try:
+        value.encode('utf-8')
+    except UnicodeError:
+        return None
+    return path.as_posix()
+
+
+def _manifest(value) -> dict[str, str] | None:
+    if not isinstance(value, dict) or not value or len(value) > PROVENANCE_LIMIT:
+        return None
+    result = {}
+    for raw, digest in value.items():
+        path = _relative_path(raw)
+        if (path is None or path in result or not isinstance(digest, str)
+                or re.fullmatch(r'[a-fA-F0-9]{64}', digest) is None):
+            return None
+        result[path] = digest.lower()
+    return result
+
+
+def _manifest_hash(manifest: dict[str, str] | None) -> str | None:
+    if manifest is None:
+        return None
+    value = json.dumps(manifest, ensure_ascii=False, sort_keys=True, separators=(',', ':'))
+    try:
+        return hashlib.sha256(value.encode('utf-8')).hexdigest()
+    except UnicodeError:
+        return None
+
+
+def _citations(value, known: dict) -> bool:
+    return (isinstance(value, list) and 0 < len(value) <= LIMITS['citations']
+            and all(isinstance(identity, str) and 0 < len(identity) <= 200 and identity in known for identity in value))
+
+
+def _persisted_provenance(state: dict, verification: dict) -> tuple[dict, list[str]]:
     reasons = []
+    source, tested = _manifest(state.get('source_manifest')), _manifest(verification.get('source_manifest'))
+    matching = source is not None and tested is not None and source == tested
+    if source is None or tested is None:
+        reasons.append('缺少非空且有效的调查或验证文件清单；旧记录无法证明证据与测试属于同一版本。')
+    elif not matching:
+        reasons.append('调查与验证文件清单不一致，无法确认测试使用了调查时的仓库版本。')
+
+    evidence = state.get('evidence')
+    catalog_valid = isinstance(evidence, list) and 0 < len(evidence) <= PROVENANCE_LIMIT
+    by_id, repository_evidence = {}, []
+    for item in _list(evidence)[:PROVENANCE_LIMIT]:
+        if not isinstance(item, dict):
+            catalog_valid = False
+            continue
+        identity = item.get('id')
+        if not isinstance(identity, str) or not 0 < len(identity) <= 200 or identity in by_id:
+            catalog_valid = False
+        else:
+            by_id[identity] = item
+        if item.get('source') == 'repository':
+            repository_evidence.append(item)
+    if not catalog_valid:
+        reasons.append('证据目录缺失、超过核验上限，或存在无效及重复的证据 ID。')
+
+    def current_repository_evidence(item):
+        path, digest = _relative_path(item.get('path')), item.get('sha256')
+        return (source is not None and path in source and isinstance(digest, str) and len(digest) == 64
+                and source[path] == digest.lower())
+
+    evidence_matches = (catalog_valid and bool(repository_evidence) and source is not None
+                        and all(current_repository_evidence(item) for item in repository_evidence))
+    if not evidence_matches:
+        reasons.append('仓库证据缺失，或其路径与 SHA256 不属于调查文件清单中的同一版本。')
+    diagnosis = _dict(state.get('diagnosis'))
+    references_valid = catalog_valid and _citations(diagnosis.get('evidence_ids'), by_id)
+    if not references_valid:
+        reasons.append('诊断引用的证据不存在或引用格式不完整。')
+    patches = _list(diagnosis.get('patches'))
+    patch_references = catalog_valid and 0 < len(patches) <= LIMITS['patches']
+    patch_targets = patch_references
+    for patch in patches[:LIMITS['patches']]:
+        patch = _dict(patch)
+        references = patch.get('evidence_ids')
+        if not _citations(references, by_id):
+            patch_references = patch_targets = False
+            continue
+        path = _relative_path(patch.get('path'))
+        if path is None or not any(by_id[identity].get('source') == 'repository'
+                                   and _relative_path(by_id[identity].get('path')) == path
+                                   and current_repository_evidence(by_id[identity]) for identity in references):
+            patch_targets = False
+    if not patch_references:
+        reasons.append('补丁引用的证据不存在或引用格式不完整。')
+    if not patch_targets:
+        reasons.append('补丁缺少目标文件在调查版本中的仓库证据引用。')
+    return {'manifests_match': matching, 'investigation_manifest_sha256': _manifest_hash(source),
+            'verification_manifest_sha256': _manifest_hash(tested),
+            'investigation_file_count': len(source) if source is not None else None,
+            'verification_file_count': len(tested) if tested is not None else None,
+            'repository_evidence_matches': evidence_matches,
+            'citations_valid': references_valid and patch_references,
+            'patch_targets_cited': patch_targets}, reasons
+
+
+def _verified(run: dict, state: dict, verification: dict) -> tuple[bool, list[str], dict]:
+    provenance, reasons = _persisted_provenance(state, verification)
     if run.get('mode') not in ('live', 'replay'):
         reasons.append('当前模式不提供补丁验证结论。')
     if run.get('status') != 'completed':
@@ -153,7 +268,7 @@ def _verified(run: dict, state: dict, verification: dict) -> tuple[bool, list[st
             or not isinstance(digest, str) or not re.fullmatch(r'[a-f0-9]{64}', digest)
             or approval.get('patch_digest') != digest):
         reasons.append('缺少与当前补丁摘要绑定的批准记录。')
-    return not reasons, reasons
+    return not reasons, reasons, provenance
 
 
 def _select_evidence(diagnosis: dict, patches: list, evidence: list) -> tuple[list, list[str], list[str]]:
@@ -188,7 +303,9 @@ def build_report(run: dict, project: dict, events: list[dict], *,
     evidence, patches, events = _list(state.get('evidence')), _list(diagnosis.get('patches')), _list(events)
     mode = run.get('mode') if isinstance(run.get('mode'), str) and run.get('mode') in MODE_LABELS else 'unknown'
     approval, usage = _dict(state.get('approval')), _dict(state.get('usage'))
-    verified, reasons = _verified(run, state, verification)
+    verified, reasons, provenance = _verified(run, state, verification)
+    for field in ('investigation_manifest_sha256', 'verification_manifest_sha256'):
+        provenance[field] = clean.digest(provenance[field])
     selected_evidence, requested_ids, unavailable_ids = _select_evidence(diagnosis, patches, evidence)
     report = {
         'schema_version': 1, 'kind': 'traceforge-run-report',
@@ -206,6 +323,7 @@ def build_report(run: dict, project: dict, events: list[dict], *,
         'evidence': [{'id': clean.text(item.get('id'), 200), 'path': clean.text(item.get('path'), 500),
                       'line_start': _integer(item.get('line_start'), minimum=1),
                       'line_end': _integer(item.get('line_end'), minimum=1),
+                      'partial_line': item.get('partial_line') is True,
                       'source': clean.text(item.get('source'), 500), 'kind': clean.text(item.get('kind'), 80),
                       'sha256': clean.digest(item.get('sha256'))}
                      for item in selected_evidence],
@@ -222,6 +340,7 @@ def build_report(run: dict, project: dict, events: list[dict], *,
                      'approved_at': clean.text(approval.get('approved_at'), 80)},
         'verification': {'available': bool(verification), 'verified': verified, 'regression_fixed': verified,
                          'reported_regression_fixed': verification.get('regression_fixed') is True,
+                         'provenance': provenance,
                          'runner': clean.text(verification.get('runner'), 80),
                          'baseline': _phase(verification.get('baseline'), clean),
                          'patched': _phase(verification.get('patched'), clean),
@@ -265,6 +384,7 @@ def render_markdown(report: dict) -> str:
     run, project = _dict(report.get('run')), _dict(report.get('project'))
     diagnosis, verification = _dict(report.get('diagnosis')), _dict(report.get('verification'))
     approval, usage = _dict(report.get('approval')), _dict(report.get('usage'))
+    provenance = _dict(verification.get('provenance'))
     lines = ['# TraceForge 运行报告', '', f'项目：{_markdown(project.get("name"))}',
              f'任务：{_markdown(run.get("title"))}', f'运行 ID：{_markdown(run.get("id"))}',
              f'状态：{_markdown(run.get("status"))}', f'模式：{_markdown(run.get("mode_label"))}',
@@ -277,7 +397,13 @@ def render_markdown(report: dict) -> str:
              '结论：' + ('本次回归修复已验证。' if verification.get('verified') is True else '尚未证实回归修复。'),
              f'执行器：{_markdown(verification.get("runner"))}',
              f'审批：{_markdown(approval.get("decision"))}；时间：{_markdown(approval.get("approved_at"))}',
-             f'批准的补丁摘要：{_markdown(approval.get("patch_digest"))}', '',
+             f'批准的补丁摘要：{_markdown(approval.get("patch_digest"))}',
+             '调查与验证文件清单：' + ('一致' if provenance.get('manifests_match') is True else '未确认'),
+             f'调查文件清单摘要：{_markdown(provenance.get("investigation_manifest_sha256"))}',
+             f'验证文件清单摘要：{_markdown(provenance.get("verification_manifest_sha256"))}',
+             '仓库证据版本：' + ('一致' if provenance.get('repository_evidence_matches') is True else '未确认'),
+             '引用与补丁目标绑定：' + ('有效' if provenance.get('citations_valid') is True
+                                           and provenance.get('patch_targets_cited') is True else '未确认'), '',
              '| 阶段 | 退出码 | 耗时 ms | 来源 | 完成 | 执行 | 通过 | 失败 | 跳过 |',
              '| --- | --- | --- | --- | --- | --- | --- | --- | --- |']
     for name, label in [('baseline', '修改前'), ('patched', '修改后')]:
@@ -292,6 +418,7 @@ def render_markdown(report: dict) -> str:
         item = _dict(item)
         lines.append(f'- {_markdown(item.get("id"))}：{_markdown(item.get("path"))} '
                      f'L{_markdown(item.get("line_start"))}–L{_markdown(item.get("line_end"))}；'
+                     f'{"部分行片段；" if item.get("partial_line") is True else ""}'
                      f'来源 {_markdown(item.get("source"))}；类型 {_markdown(item.get("kind"))}；'
                      f'SHA256 {_markdown(item.get("sha256"))}')
     citations = _dict(report.get('citations'))

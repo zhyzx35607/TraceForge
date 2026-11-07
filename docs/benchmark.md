@@ -1,6 +1,6 @@
 # TraceForge Benchmark
 
-`traceforge.benchmark.run_benchmark` runs a fixed catalog of independent engineering incident cases. Every run copies a case's public workspace into a fresh temporary directory. The agent can see only that copy, which contains the source, `PROBLEM.md`, and `test_public.py`. Hidden tests and the oracle patch stay under the benchmark catalog and are copied into a second verification directory only after investigation finishes.
+`traceforge.benchmark.run_benchmark` runs a fixed catalog of independent engineering incident cases. Every run copies a case's public workspace into a fresh temporary directory. The agent can see only that copy, which contains the source, `PROBLEM.md`, and `test_public.py`. Hidden tests and the oracle patch never enter the agent workspace. Hidden tests are added to a separate verification copy after investigation; in oracle mode, a benchmark adapter supplies the known patch before verification.
 
 The catalog currently has ten cases:
 
@@ -24,7 +24,9 @@ The equivalent CLI is `python -m traceforge benchmark --mode oracle`. Use `--mod
 
 - `oracle` runs the normal Engine state machine and approval/verification flow with a benchmark-only oracle adapter. It executes real public and hidden tests, but its correctness is reported under `oracle_verifier_correctness`; it is excluded from model functional accuracy and records zero provider calls.
 - `retrieval` builds the real index and runs `investigate` mode. It reports only whether all manifest relevant paths appeared in the initial top-eight retrieval. It does not apply patches or count a repair.
-- `live` requires configured `TRACEFORGE_API_KEY` and `TRACEFORGE_MODEL`, uses the configured provider and Docker runner, and records provider usage returned by the provider. It never falls back to a paid or local execution path.
+- `live` requires configured `TRACEFORGE_API_KEY` and `TRACEFORGE_MODEL`, uses the configured provider and Docker runner, and records provider usage returned by the provider. Requests use the configured service and may incur its charges. It never switches provider or model automatically and never falls back from Docker to local execution.
+
+The per-case retrieval coverage is a weak smoke metric: each public workspace has only 4–6 files and includes the query's `PROBLEM.md`. Even a query-independent alphabetical top-eight baseline covers the required files. Do not present 10/10 coverage as ranking quality. The separate `traceforge retrieval-evaluate` command combines public workspaces, removes problem text from the index and compares four methods at smaller cutoffs; see [retrieval ablation](retrieval-evaluation.md).
 
 For every selected case the report records status, latency, provider usage, evidence coverage, patch count, public and hidden baseline/post exit codes, whether the original workspace remained unchanged, and any bounded error. The report uses separate denominators for repair correctness, abstention, and safety. A failed or timed-out selected case remains in its applicable denominator. A cancelled run stores the completed prefix and writes a partial report.
 

@@ -194,6 +194,10 @@ def test_forged_stdout_and_os_exit_cannot_prove_fix(repository):
 @pytest.mark.parametrize('style', ['python-module', 'pytest-command'])
 def test_pytest_observer_reports_real_outcomes(repository, style):
     _root, settings, project, patch = repository
+    # This verifies observer outcomes, not cold-start performance. Windows
+    # interpreter/plugin startup was measured near the old five-second cap;
+    # test_timeout_and_cancellation separately enforces the short hard limit.
+    settings.test_timeout = 15
     project['test_command'] = ([sys.executable, '-m', 'pytest', '-q'] if style == 'python-module'
                                else ['pytest', '-q'])
     result = run_verification(project, [patch], settings, 'pytest-' + style)
@@ -224,7 +228,7 @@ def test_docker_observer_is_readonly_with_separate_report_mount(repository):
     wrapped, framework = observed_command(['python', '-m', 'unittest', 'discover'],
                                           '/traceforge-observer/observer.py', '/traceforge-reports/baseline.json', docker=True)
     assert framework == 'unittest'
-    assert wrapped[:3] == ['python', '-I', '/traceforge-observer/observer.py']
+    assert wrapped[:4] == ['python', '-I', '-B', '/traceforge-observer/observer.py']
 
 
 def test_unknown_command_runs_but_cannot_use_stdout_to_verify(repository):

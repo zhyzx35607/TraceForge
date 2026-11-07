@@ -15,8 +15,17 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'frontend build failed' }
     Set-Location -LiteralPath $taskRoot
     $buildLog = Join-Path $acceptanceRoot 'build.log'
-    & uv build --out-dir (Join-Path $taskRoot 'dist') *> $buildLog
-    if ($LASTEXITCODE -ne 0) { throw "release build failed; see $buildLog" }
+    # Windows PowerShell 5.1 turns redirected native stderr (including uv's
+    # progress messages) into ErrorRecords. Judge the native exit code instead.
+    $buildPreference = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = 'Continue'
+        & uv build --out-dir (Join-Path $taskRoot 'dist') *> $buildLog
+        $buildExit = $LASTEXITCODE
+    } finally {
+        $ErrorActionPreference = $buildPreference
+    }
+    if ($buildExit -ne 0) { throw "release build failed; see $buildLog" }
     $wheel = Join-Path $taskRoot 'dist\traceforge_agent-0.1.0-py3-none-any.whl'
     if (-not (Test-Path -LiteralPath $wheel)) { throw 'Expected wheel was not produced' }
     $venvRoot = Join-Path $acceptanceRoot 'venv'

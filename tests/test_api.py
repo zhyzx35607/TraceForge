@@ -8,6 +8,13 @@ from traceforge.config import DEMO_ROOT, Settings
 from traceforge.store import patch_digest
 
 
+@pytest.fixture(autouse=True)
+def isolated_docker_capability(monkeypatch):
+    # API contract tests do not depend on the host daemon. Real Docker startup
+    # and snapshot execution are exercised by the separate acceptance run.
+    monkeypatch.setattr("traceforge.api.docker_available", lambda: False)
+
+
 @pytest.fixture
 def client(tmp_path):
     settings = Settings(data_dir=tmp_path / "data", allowed_roots=[tmp_path, DEMO_ROOT])
@@ -60,6 +67,79 @@ def test_approval_digest_gate_via_api(client):
 def test_cross_site_and_dns_rebinding_are_denied(client):
     assert client.post("/api/demo", headers={"Origin": "https://attacker.example"}).status_code == 403
     assert client.get("/api/health", headers={"Host": "attacker.example"}).status_code == 403
+
+
+@pytest.mark.parametrize("origin", ["http://127.0.0.1:9999", "http://localhost:8710", "https://127.0.0.1:8710"])
+def test_other_loopback_origins_cannot_create_or_cancel_runs(client, origin):
+    run = client.post("/api/demo").json()["run"]
+    store = client.app.state.store
+    before_run = store.get_run(run["id"])
+    before_events = store.events(run["id"])
+    before_runs = store.list_runs()
+    headers = {"Host": "127.0.0.1:8710", "Origin": origin, "Sec-Fetch-Mode": "no-cors"}
+    assert client.post("/api/demo", headers=headers).status_code == 403
+    assert client.post(f"/api/runs/{run['id']}/cancel", headers=headers).status_code == 403
+    assert store.get_run(run["id"]) == before_run
+    assert store.events(run["id"]) == before_events
+    assert store.list_runs() == before_runs
+
+
+@pytest.mark.parametrize(("host", "origin"), [
+    ("localhost:8710", "http://localhost:8710"),
+    ("LOCALHOST:8710", "HTTP://localhost:8710"),
+    ("127.0.0.1", "http://127.0.0.1:80"),
+    ("127.0.0.1:80", "http://127.0.0.1"),
+    ("[::1]:8710", "http://[::1]:8710"),
+    ("[0:0:0:0:0:0:0:1]:8710", "http://[::1]:8710"),
+    # Vite's default proxy keeps the browser's Host, despite using backend port 8710.
+    ("localhost:5173", "http://localhost:5173"),
+])
+def test_same_origin_and_vite_preserved_host_are_allowed(client, host, origin):
+    response = client.post("/api/demo", headers={"Host": host, "Origin": origin})
+    assert response.status_code == 201
+    assert client.app.state.store.get_run(response.json()["run"]["id"]) is not None
+
+
+@pytest.mark.parametrize("origin", [
+    "", "null", "localhost", "http:localhost", "//localhost", "ftp://localhost", "file://localhost",
+    "http://localhost/", "http://localhost/path", "http://localhost?", "http://localhost?q=x",
+    "http://localhost#", "http://localhost#fragment", "http://user@localhost", "http://@localhost",
+    "http://user:password@localhost", "http://localhost:", "http://localhost:no", "http://localhost:65536",
+    "http://[broken", "http://[::1]junk", "http://local\\host", "http://local\thost",
+    " http://localhost", "http://localhost ", "http://localhost,http://attacker.example",
+])
+def test_malformed_origin_is_rejected_without_creating_state(client, origin):
+    assert client.post("/api/demo", headers={"Host": "localhost", "Origin": origin}).status_code == 400
+    assert client.app.state.store.list_projects() == []
+    assert client.app.state.store.list_runs() == []
+
+
+@pytest.mark.parametrize("host", ["", "localhost:", "localhost:no", "localhost:65536", "user@localhost",
+                                 "localhost/path", "localhost?", "localhost#", "local\thost", "[::1]junk"])
+def test_malformed_host_is_rejected(client, host):
+    assert client.post("/api/demo", headers={"Host": host}).status_code == 400
+    assert client.app.state.store.list_runs() == []
+
+
+def test_duplicate_origin_or_host_headers_are_rejected(client):
+    assert client.post("/api/demo", headers=[("Host", "localhost"), ("Host", "localhost")]).status_code == 400
+    assert client.post("/api/demo", headers=[("Origin", "http://testserver"),
+                                            ("Origin", "http://testserver")]).status_code == 400
+    assert client.app.state.store.list_runs() == []
+
+
+def test_token_remote_same_origin_https_and_cli_remain_supported(tmp_path):
+    app = create_app(Settings(data_dir=tmp_path, api_token="test-only-token"), start_workers=False)
+    with TestClient(app, base_url="https://workbench.example") as remote:
+        headers = {"Authorization": "Bearer test-only-token"}
+        assert remote.get("/api/health", headers=headers).status_code == 200
+        assert remote.post("/api/demo", headers={**headers, "Origin": "https://workbench.example:443"}).status_code == 201
+        assert remote.get("/api/health", headers={**headers, "Host": "workbench.example:443",
+                                                "Origin": "https://workbench.example"}).status_code == 200
+        for origin in ("http://workbench.example", "https://workbench.example:8443", "http://localhost:5173"):
+            assert remote.post("/api/demo", headers={**headers, "Origin": origin}).status_code == 403
+        assert len(app.state.store.list_runs()) == 1
+        assert remote.get("/api/health", headers={"Origin": "https://workbench.example"}).status_code == 401
 
 
 def test_optional_api_token(tmp_path):
@@ -154,3 +234,28 @@ def test_report_download_requires_token_and_removes_configured_secrets(tmp_path)
             assert all(value not in response.text for value in (api_key, token, "private-continuation"))
             assert str(tmp_path).replace("\\", "\\\\") not in response.text
             assert "[REDACTED]" in response.text or "REDACTED" in response.text
+
+
+def test_retrieval_evaluation_saved_report_and_controlled_errors(client):
+    import json
+    url = '/api/retrieval-evaluation'
+    missing = client.get(url)
+    assert missing.status_code == 404 and missing.json()['available'] is False
+    path = client.app.state.settings.data_dir / 'retrieval-evaluation.json'
+    report = {'kind': 'synthetic-retrieval-pilot', 'provider_calls': 0, 'available': False,
+              'methods': {'bm25': {'mrr': 0.5}}}
+    path.write_text(json.dumps(report), encoding='utf-8')
+    loaded = client.get(url)
+    assert loaded.status_code == 200
+    assert loaded.json() == {**report, 'available': True}
+    for invalid in ('{invalid', '[]', '{"kind": "unrelated"}'):
+        path.write_text(invalid, encoding='utf-8')
+        response = client.get(url)
+        assert response.status_code == 500
+        assert '报告不可读' in response.json()['detail']
+
+
+def test_retrieval_report_is_authenticated(tmp_path):
+    app = create_app(Settings(data_dir=tmp_path, api_token='local-test-token'), start_workers=False)
+    with TestClient(app) as client:
+        assert client.get('/api/retrieval-evaluation').status_code == 401

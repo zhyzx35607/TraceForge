@@ -7,7 +7,14 @@ from pathlib import Path
 
 import pytest
 
-from traceforge.retrieval import MAX_CONTENT_CHARS, RepositoryIndex, is_denied_path, redact, safe_path
+from traceforge.retrieval import (
+    MAX_CHUNK_CHARS,
+    MAX_CONTENT_CHARS,
+    RepositoryIndex,
+    is_denied_path,
+    redact,
+    safe_path,
+)
 
 
 def write(root: Path, path: str, content: str) -> Path:
@@ -41,6 +48,35 @@ def test_cjk_retrieval(tmp_path):
     write(tmp_path, "orders.py", "# 订单重复扣款错误，退款处理需要幂等检查\ndef refund():\n    pass\n")
     write(tmp_path, "display.py", "# 页面字体颜色与导航布局\ndef draw():\n    pass\n")
     assert RepositoryIndex(tmp_path).search("重复扣款退款")[0]["path"] == "orders.py"
+
+
+@pytest.mark.parametrize("method", ["bm25", "char", "rrf"])
+def test_production_search_methods_share_evidence_and_access_boundaries(tmp_path, method):
+    write(tmp_path, "service.log", "x" * 7000 + "\nqzvplmokn = 42\n")
+    write(tmp_path, ".env", "qzvplmokn=forbidden_value")
+    index = RepositoryIndex(tmp_path)
+    evidence = next(item for item in index.search("qzvplmokn", method=method)
+                    if "qzvplmokn" in item["content"])
+    assert evidence["path"] == "service.log"
+    assert evidence["line_start"] <= 2 <= evidence["line_end"]
+    assert evidence["score"] > 0
+    assert len(evidence["content"]) <= MAX_CONTENT_CHARS
+    assert "forbidden_value" not in evidence["content"]
+
+
+def test_search_method_selection_uses_lexical_and_character_routes(tmp_path):
+    write(tmp_path, "code.py", "def payment(value):\n    return value\n")
+    index = RepositoryIndex(tmp_path)
+    assert index.search("paymnt", method="bm25") == []
+    assert index.search("paymnt", method="char")[0]["path"] == "code.py"
+    assert index.search("paymnt", method="rrf")[0]["path"] == "code.py"
+    assert index.search("payment") == index.search("payment", method="rrf")
+
+
+@pytest.mark.parametrize("method", ["unknown", "alphabetical", "BM25", "", None])
+def test_search_rejects_unknown_methods_even_for_empty_queries(tmp_path, method):
+    with pytest.raises(ValueError, match="Unknown retrieval method"):
+        RepositoryIndex(tmp_path).search("", limit=0, method=method)
 
 
 def test_incremental_build_and_search_follow_update_and_delete(tmp_path):
@@ -164,6 +200,89 @@ def test_large_log_and_query_remain_bounded_and_redacted(tmp_path):
     assert direct["line_start"] == direct["line_end"] == 3
 
 
+def test_long_line_does_not_hide_following_lines(tmp_path):
+    content = "x" * 7000 + "\nqzvplmokn = 42\n"
+    write(tmp_path, "long.log", content)
+    results = RepositoryIndex(tmp_path).search("qzvplmokn")
+    evidence = next(item for item in results if "qzvplmokn" in item["content"])
+    assert evidence["line_start"] <= 2 <= evidence["line_end"]
+    assert evidence["content"] == "\n".join(content.splitlines()[evidence["line_start"] - 1:evidence["line_end"]])
+    assert len(evidence["content"]) <= MAX_CONTENT_CHARS
+
+
+def test_character_bounded_chunks_cover_every_line(tmp_path):
+    lines = [f"marker{number:02d}qzvplmokn " + "x" * 500 for number in range(24)]
+    write(tmp_path, "rows.log", "\n".join(lines))
+    index = RepositoryIndex(tmp_path)
+    assert index.build()["chunks"] > 1
+    for number, line in enumerate(lines):
+        marker = line.split()[0]
+        evidence = next(item for item in index.search(marker) if marker in item["content"])
+        assert evidence["line_start"] <= number + 1 <= evidence["line_end"]
+        assert evidence["content"] == "\n".join(lines[evidence["line_start"] - 1:evidence["line_end"]])
+        assert len(evidence["content"]) <= MAX_CONTENT_CHARS
+
+
+def test_long_single_line_returns_matching_windows_with_real_line_numbers(tmp_path):
+    content = "header\n" + "x" * 7000 + " midpointqzvplmokn " + "x" * 10000 + " tailqzvplmokn\nfooter"
+    source = write(tmp_path, "huge.log", content)
+    original = source.read_bytes()
+    index = RepositoryIndex(tmp_path)
+    results = index.search("midpointqzvplmokn tailqzvplmokn")
+    for marker in ("midpointqzvplmokn", "tailqzvplmokn"):
+        evidence = next(item for item in results if marker in item["content"])
+        assert evidence["line_start"] == evidence["line_end"] == 2
+        assert evidence["partial_line"] is True
+        assert evidence["content"] in content.splitlines()[1]
+        assert len(evidence["content"]) <= MAX_CHUNK_CHARS
+        assert evidence["sha256"] == hashlib.sha256(original).hexdigest()
+    assert [item["id"] for item in results] == [
+        item["id"] for item in index.search("midpointqzvplmokn tailqzvplmokn")
+    ]
+    assert len({item["id"] for item in results}) == len(results)
+    assert source.read_bytes() == original
+
+
+def test_long_line_overlap_preserves_symbol_across_window_boundary(tmp_path):
+    marker = "qzvplmokn_symbol_crossing_window_boundary"
+    write(tmp_path, "boundary.log", "x" * (MAX_CHUNK_CHARS - 12) + " " + marker + " " + "x" * 7000)
+    results = RepositoryIndex(tmp_path).search(marker)
+    evidence = next(item for item in results if marker in item["content"])
+    assert evidence["line_start"] == evidence["line_end"] == 1
+    assert evidence["partial_line"] is True
+
+
+def test_long_line_credentials_are_redacted_before_chunking(tmp_path):
+    secret = "privatecredentialqzvplmokn" * 600
+    content = "x" * (MAX_CHUNK_CHARS - 20) + " api_key=" + secret + " visibleqzvplmokn"
+    source = write(tmp_path, "service.log", content)
+    index = RepositoryIndex(tmp_path)
+    results = index.search("api_key visibleqzvplmokn")
+    assert any("visibleqzvplmokn" in item["content"] for item in results)
+    assert any("[REDACTED]" in item["content"] for item in results)
+    for item in [*results, index.read("service.log")]:
+        assert "privatecredentialqzvplmokn" not in item["content"]
+        assert item["line_start"] == item["line_end"] == 1
+        assert len(item["content"]) <= MAX_CONTENT_CHARS
+    assert source.read_text(encoding="utf-8") == content
+
+
+@pytest.mark.parametrize("newline", ["\n", "\r\n", "\r"])
+def test_complete_file_redaction_preserves_line_numbers_and_partial_read_privacy(tmp_path, newline):
+    lines = ["Bearer", "syntheticbearervalue", "-----BEGIN PRIVATE KEY-----",
+             "privatekeymaterial", "-----END PRIVATE KEY-----", "visibleqzvplmokn"]
+    (tmp_path / "settings.txt").write_bytes(newline.join(lines).encode("utf-8"))
+    index = RepositoryIndex(tmp_path)
+    evidence = index.search("visibleqzvplmokn")[0]
+    assert evidence["line_end"] == len(lines)
+    assert "syntheticbearervalue" not in evidence["content"]
+    assert "privatekeymaterial" not in evidence["content"]
+    assert index.read("settings.txt", 6, 6)["content"] == "visibleqzvplmokn"
+    direct = index.read("settings.txt", 4, 4)
+    assert direct["content"] == ""
+    assert direct["line_start"] == direct["line_end"] == 4
+
+
 def test_read_line_ranges_and_limits(tmp_path):
     write(tmp_path, "app.py", "one\ntwo\nthree\nfour\n")
     index = RepositoryIndex(tmp_path)
@@ -175,6 +294,25 @@ def test_read_line_ranges_and_limits(tmp_path):
             index.read("app.py", start, end)
     assert index.search(" ") == []
     assert index.search("one", limit=0) == []
+
+
+@pytest.mark.parametrize("alias", ["./main.py", ".\\main.py"])
+def test_read_returns_canonical_repository_path_for_dot_alias(tmp_path, alias):
+    write(tmp_path, "main.py", "canonicalqzvplmokn = 1\n")
+    index = RepositoryIndex(tmp_path)
+    direct = index.read(alias)
+    assert direct["path"] == "main.py"
+    assert direct == index.read("main.py")
+    assert direct["sha256"] == index.search("canonicalqzvplmokn")[0]["sha256"]
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Case-insensitive Windows path alias")
+def test_read_preserves_real_filename_case_for_windows_alias(tmp_path):
+    write(tmp_path, "MixedCase.py", "canonicalqzvplmokn = 1\n")
+    index = RepositoryIndex(tmp_path)
+    direct = index.read("MIXEDCASE.PY")
+    assert direct["path"] == "MixedCase.py"
+    assert direct == index.read("MixedCase.py")
 
 
 def test_redaction_common_forms():

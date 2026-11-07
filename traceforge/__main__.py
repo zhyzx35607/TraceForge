@@ -9,6 +9,7 @@ def main():
     serve.add_argument("--host", default="127.0.0.1")
     serve.add_argument("--port", type=int, default=8710)
     commands.add_parser("evaluate", help="Run reproducible offline harness evaluation")
+    commands.add_parser("retrieval-evaluate", help="Compare lexical retrieval methods on the public synthetic corpus")
     doctor = commands.add_parser("doctor", help="Inspect dependencies and provider connectivity")
     doctor.add_argument("--smoke", action="store_true", help="Also make one small billed generation request")
     benchmark = commands.add_parser("benchmark", help="Run the isolated multi-fault benchmark")
@@ -26,6 +27,14 @@ def main():
     if args.command == "evaluate":
         from .evaluation import main as evaluate
         return evaluate()
+    if args.command == "retrieval-evaluate":
+        import json
+
+        from .config import Settings
+        from .retrieval_evaluation import run_retrieval_evaluation
+        report = run_retrieval_evaluation(Settings.from_env())
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+        return 0
     if args.command == "benchmark":
         import asyncio
         import json

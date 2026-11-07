@@ -1,12 +1,13 @@
 import asyncio
 import copy
+import hashlib
 import json
 import sys
 
 import pytest
 
 from traceforge.config import DEMO_ROOT, Settings
-from traceforge.engine import Engine, _json
+from traceforge.engine import Engine, EvidenceVersionError, _json
 from traceforge.provider import ProviderError, _responses_input
 from traceforge.retrieval import RepositoryIndex
 from traceforge.store import LeaseLostError, Store, patch_digest
@@ -202,7 +203,8 @@ async def test_large_search_compacts_and_recovers_seen_references(demo, monkeypa
     generated = []
     def large_search(index, query, limit=8):
         items = [{'id': f'large-{query}-{n}', 'path': 'pricing.py', 'source': 'repository',
-                  'line_start': 1, 'line_end': 120, 'kind': 'code', 'sha256': 'a' * 64,
+                  'line_start': 1, 'line_end': 120, 'kind': 'code',
+                  'sha256': hashlib.sha256((DEMO_ROOT / 'pricing.py').read_bytes()).hexdigest(),
                   'score': 1, 'content': query + ':' + 'evidence ' * 900} for n in range(limit)]
         generated.extend(items)
         return items
@@ -357,7 +359,7 @@ async def test_recovered_verification_rechecks_manifest(demo, monkeypatch):
     await engine.verify(run['id'])
     actual = store.get_run(run['id'])
     assert actual['status'] == 'failed'
-    assert '审批后' in actual['error']
+    assert '证据版本' in actual['error']
     assert store.memories(project['id']) == []
 
 
@@ -410,3 +412,236 @@ async def test_expired_worker_stops_verification_and_preserves_recovery(demo):
     assert next_job['attempts'] == 2
     assert not any(item['kind'] == 'verification.result' and item['payload']['phase'] == 'patched'
                    for item in store.events(run['id']))
+
+
+@pytest.mark.parametrize('changed', [{'path': 'missing.py'}, {'sha256': 'b' * 64}, {'sha256': None}])
+def test_repository_evidence_must_match_fixed_revision(changed):
+    item = {'source': 'repository', 'path': 'main.py', 'sha256': 'a' * 64}
+    Engine._require_evidence_versions([item], {'main.py': 'a' * 64})
+    with pytest.raises(EvidenceVersionError, match='证据版本'):
+        Engine._require_evidence_versions([{**item, **changed}], {'main.py': 'a' * 64})
+    # A historical commit or user log is not a claim about current file bytes.
+    Engine._require_evidence_versions([{**item, **changed, 'source': 'git'}], {})
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('action', ['read', 'search'])
+async def test_transient_repository_revision_never_reaches_model(tmp_path, monkeypatch, action):
+    root = tmp_path / 'repo'
+    root.mkdir()
+    target = root / 'main.py'
+    original = b'def answer():\n    return 1\n# revision A\n'
+    target.write_bytes(original)
+    settings = Settings(data_dir=tmp_path / 'state', allowed_roots=[root])
+    store = Store(settings.data_dir / 'test.sqlite')
+    project = store.create_project({'name': 'revision test', 'root': str(root), 'runner': 'local',
+                                   'trusted': True, 'test_command': [sys.executable, '-m', 'unittest']})
+    run = new_run(store, project, 'live')
+    engine = Engine(store, settings)
+    original_read, original_search = RepositoryIndex.read, RepositoryIndex.search
+    transient_observations = []
+
+    def changed_observation(index, *args, **kwargs):
+        # Reproduce A -> B -> A entirely inside one observation. Comparing only
+        # the manifests before and after investigation cannot detect this.
+        target.write_bytes(original.replace(b'revision A', b'revision B'))
+        try:
+            value = (original_read if action == 'read' else original_search)(index, *args, **kwargs)
+            transient_observations.extend([value] if action == 'read' else value)
+            return value
+        finally:
+            target.write_bytes(original)
+
+    requests = []
+
+    class OneObservationProvider:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def complete(self, messages, **kwargs):
+            requests.append(copy.deepcopy(messages))
+            assert len(requests) == 1, 'A mismatched observation must stop before another model call'
+            monkeypatch.setattr(RepositoryIndex, action, changed_observation)
+            arguments = {'path': 'main.py', 'start': 1, 'end': 3} if action == 'read' else {
+                'query': 'answer', 'limit': 5}
+            raw = _json(arguments)
+            return {'message': {'role': 'assistant', 'content': None, 'tool_calls': [
+                {'id': 'observe', 'type': 'function', 'function': {'name': action, 'arguments': raw}}]},
+                'tool_calls': [{'id': 'observe', 'name': action, 'arguments': raw}]}
+
+    monkeypatch.setattr('traceforge.engine.OpenAIProvider', OneObservationProvider)
+    await engine.investigate(run['id'])
+    actual = store.get_run(run['id'])
+    assert target.read_bytes() == original
+    assert transient_observations and transient_observations[0]['sha256'] != hashlib.sha256(original).hexdigest()
+    assert actual['status'] == 'failed'
+    assert actual['state']['fault_type'] == 'source_changed'
+    assert len(requests) == 1
+    assert not actual['state'].get('diagnosis')
+    assert not any(item['sha256'] == transient_observations[0]['sha256']
+                   for item in actual['state'].get('evidence', []))
+    assert store.memories(project['id']) == []
+
+
+@pytest.mark.asyncio
+async def test_recovered_evidence_revision_rejected_before_provider(demo, monkeypatch):
+    _settings, store, project, engine = demo
+    run = new_run(store, project, 'live')
+    item = RepositoryIndex(DEMO_ROOT).read('pricing.py')
+    store.update_run(run['id'], status='investigating', state={'evidence': [{**item, 'sha256': '0' * 64}]})
+
+    def unexpected_provider(*args, **kwargs):
+        pytest.fail('Recovered stale observations must not reach provider construction')
+
+    monkeypatch.setattr('traceforge.engine.OpenAIProvider', unexpected_provider)
+    await engine.investigate(run['id'])
+    actual = store.get_run(run['id'])
+    assert actual['status'] == 'failed'
+    assert actual['state']['fault_type'] == 'source_changed'
+    assert store.memories(project['id']) == []
+
+
+@pytest.mark.asyncio
+async def test_verification_rechecks_evidence_from_old_checkpoint(demo, monkeypatch):
+    _settings, store, project, engine = demo
+    run = new_run(store, project)
+    await engine.investigate(run['id'])
+    ready = store.get_run(run['id'])
+    store.decide(run['id'], 'approve', ready['state']['patch_digest'])
+    observations = copy.deepcopy(ready['state']['evidence'])
+    next(item for item in observations if item['source'] == 'repository')['sha256'] = '0' * 64
+    store.update_run(run['id'], state={'evidence': observations})
+    called = []
+    monkeypatch.setattr('traceforge.engine.run_verification', lambda *a, **k: called.append(True))
+    await engine.verify(run['id'])
+    actual = store.get_run(run['id'])
+    assert actual['status'] == 'failed'
+    assert actual['state']['fault_type'] == 'source_changed'
+    assert not called
+    assert store.memories(project['id']) == []
+
+
+def test_patch_cannot_use_historical_evidence_as_current_file(demo):
+    _settings, _store, _project, engine = demo
+    item = RepositoryIndex(DEMO_ROOT).read('pricing.py')
+    item['source'] = 'git'
+    diagnosis = {'summary': 'finding', 'root_cause': 'unknown', 'confidence': 'low',
+                 'evidence_ids': [item['id']], 'limitations': [], 'patches': [
+                     {'path': 'pricing.py', 'before': 'subtotal =', 'after': 'subtotal =',
+                      'reason': 'historical reference is insufficient', 'evidence_ids': [item['id']]}]}
+    with pytest.raises(ValueError, match='目标文件'):
+        engine._validate(diagnosis, {item['id']: item}, DEMO_ROOT, source_manifest={})
+
+
+@pytest.mark.asyncio
+async def test_recovery_rejects_old_message_when_catalog_has_newer_same_id(tmp_path, monkeypatch):
+    root = tmp_path / 'repo'
+    root.mkdir()
+    path = root / 'main.py'
+    version_a = b'answer = 42\n# revision A\n'
+    path.write_bytes(version_a.replace(b'revision A', b'revision B'))
+    old = RepositoryIndex(root).read('main.py', 1, 1)
+    path.write_bytes(version_a)
+    current = RepositoryIndex(root).read('main.py', 1, 1)
+    assert old['id'] == current['id'] and old['sha256'] != current['sha256']
+    settings = Settings(data_dir=tmp_path / 'state', allowed_roots=[root])
+    store = Store(settings.data_dir / 'test.sqlite')
+    project = store.create_project({'name': 'old messages', 'root': str(root), 'runner': 'local',
+                                   'trusted': True, 'test_command': [sys.executable, '-m', 'unittest']})
+    run = new_run(store, project, 'live')
+    messages = [{'role': 'system', 'content': 'rules'}, {'role': 'user', 'content': _json({'symptom': 'check'})}]
+    for number, item in enumerate([old, current]):
+        messages.extend([
+            {'role': 'assistant', 'content': None, 'tool_calls': [
+                {'id': str(number), 'type': 'function', 'function': {'name': 'read',
+                 'arguments': _json({'path': 'main.py', 'start': 1, 'end': 1})}}]},
+            {'role': 'tool', 'tool_call_id': str(number), 'content': _json({'evidence': [item]})}])
+    store.update_run(run['id'], status='investigating', state={
+        'source_manifest': {'main.py': current['sha256']}, 'evidence': [current],
+        'agent_messages': messages, 'seen_evidence_ids': [current['id']], 'agent_steps': 2})
+    calls = []
+
+    class UnexpectedProvider:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def complete(self, *args, **kwargs):
+            calls.append(True)
+            raise AssertionError('An old observation must not be replayed to a provider')
+
+    monkeypatch.setattr('traceforge.engine.OpenAIProvider', UnexpectedProvider)
+    await Engine(store, settings).investigate(run['id'])
+    actual = store.get_run(run['id'])
+    assert actual['status'] == 'failed' and actual['state']['fault_type'] == 'source_changed'
+    assert not calls
+    assert path.read_bytes() == version_a
+
+
+def test_legacy_relative_alias_binds_to_real_file(tmp_path):
+    root = tmp_path / 'repo'
+    root.mkdir()
+    path = root / 'main.py'
+    path.write_text('answer = 42\n', encoding='utf-8')
+    item = RepositoryIndex(root).read('main.py')
+    item['path'] = './main.py'
+    Engine._require_evidence_versions([item], {'main.py': item['sha256']}, root)
+    if sys.platform == 'win32':
+        item['path'] = 'MAIN.PY'
+        Engine._require_evidence_versions([item], {'main.py': item['sha256']}, root)
+
+
+@pytest.mark.asyncio
+async def test_empty_repository_checkpoint_does_not_adopt_new_files(tmp_path, monkeypatch):
+    root = tmp_path / 'repo'
+    root.mkdir()
+    settings = Settings(data_dir=tmp_path / 'state', allowed_roots=[root])
+    store = Store(settings.data_dir / 'test.sqlite')
+    project = store.create_project({'name': 'empty revision', 'root': str(root), 'runner': 'local',
+                                   'trusted': True, 'test_command': [sys.executable, '-m', 'unittest']})
+    run = new_run(store, project, 'live')
+    calls = []
+
+    class InterruptedProvider:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def complete(self, *args, **kwargs):
+            calls.append(True)
+            raise asyncio.CancelledError()
+
+    monkeypatch.setattr('traceforge.engine.OpenAIProvider', InterruptedProvider)
+    with pytest.raises(asyncio.CancelledError):
+        await Engine(store, settings).investigate(run['id'])
+    interrupted = store.get_run(run['id'])
+    assert interrupted['state']['source_manifest'] == {}
+    (root / 'main.py').write_text('answer = 42\n', encoding='utf-8')
+    await Engine(store, settings).investigate(run['id'])
+    actual = store.get_run(run['id'])
+    assert actual['status'] == 'failed' and actual['state']['fault_type'] == 'source_changed'
+    assert actual['state']['source_manifest'] == {}
+    assert len(calls) == 1
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('fail', [False, True])
+async def test_collection_shares_one_fresh_search_and_keeps_symptom(demo, monkeypatch, fail):
+    _settings, store, project, engine = demo
+    run = new_run(store, project, 'investigate')
+    searches = []
+    item = {'id': 'log-observation', 'path': 'incident.log', 'kind': 'log', 'content': 'failure'}
+
+    class CountingIndex:
+        def search(self, query, limit):
+            searches.append((query, limit))
+            if fail:
+                raise OSError('temporary read failure')
+            return [item]
+
+    monkeypatch.setattr('traceforge.engine.collect_git_evidence', lambda *args, **kwargs: [])
+    evidence = await engine._collect(run, project, CountingIndex())
+    assert searches == [(run['query'], 8)]
+    assert any(value['source'] == 'submitted_symptom' for value in evidence.values() if 'source' in value)
+    assert ('log-observation' in evidence) is not fail
+    events = store.events(run['id'])
+    assert any(event['kind'] == 'specialist.completed' and event['payload']['specialist'] == 'logs'
+               for event in events)

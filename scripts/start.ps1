@@ -1,4 +1,4 @@
-param([int]$Port = 8710, [string]$ProjectRoot = '')
+﻿param([int]$Port = 8710, [string]$ProjectRoot = '')
 $ErrorActionPreference = 'Stop'
 $taskRoot = Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $taskRoot

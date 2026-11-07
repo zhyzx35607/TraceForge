@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
-  "session_id": "20261107T024936Z-b0e64e03",
+  "session_id": "20261107T051326Z-457b7803",
   "mode": "oracle",
   "label": "VERIFIER ORACLE — known patches, no LLM calls, not a model success rate",
   "status": "completed",
-  "started_at": "2026-11-07T02:49:36.516902+00:00",
+  "started_at": "2026-11-07T05:13:26.182490+00:00",
   "selected_case_ids": [
     "cache_invalidation",
     "cursor_pagination",
@@ -46,7 +46,7 @@
         "runner": "local",
         "baseline": {
           "exit_code": 1,
-          "duration_ms": 375,
+          "duration_ms": 1328,
           "timed_out": false,
           "tests": {
             "completed": true,
@@ -67,7 +67,7 @@
         },
         "patched": {
           "exit_code": 0,
-          "duration_ms": 250,
+          "duration_ms": 1875,
           "timed_out": false,
           "tests": {
             "completed": true,
@@ -93,7 +93,7 @@
         "runner": "local",
         "baseline": {
           "exit_code": 1,
-          "duration_ms": 203,
+          "duration_ms": 625,
           "timed_out": false,
           "tests": {
             "framework": "unittest",
@@ -118,7 +118,7 @@
         },
         "patched": {
           "exit_code": 0,
-          "duration_ms": 219,
+          "duration_ms": 688,
           "timed_out": false,
           "tests": {
             "framework": "unittest",
@@ -147,11 +147,11 @@
       "source_unchanged": true,
       "hidden_material_visible_to_agent": false,
       "error": null,
-      "run_id": "4a8ae45c6948491094776ccebfabbcc0",
+      "run_id": "e692c95535d54d1ca92d23eb69960b19",
       "runner": "local",
       "diagnosis_summary": "评测器使用预先给定的 oracle 补丁验证审批与测试链路。",
       "blocked_tool_attempts": 0,
-      "latency_ms": 1547
+      "latency_ms": 5328
     },
     {
       "case_id": "cursor_pagination",
@@ -181,7 +181,7 @@
         "runner": "local",
         "baseline": {
           "exit_code": 1,
-          "duration_ms": 204,
+          "duration_ms": 407,
           "timed_out": false,
           "tests": {
             "completed": true,
@@ -202,7 +202,7 @@
         },
         "patched": {
           "exit_code": 0,
-          "duration_ms": 187,
+          "duration_ms": 312,
           "timed_out": false,
           "tests": {
             "completed": true,
@@ -228,7 +228,7 @@
         "runner": "local",
         "baseline": {
           "exit_code": 1,
-          "duration_ms": 235,
+          "duration_ms": 406,
           "timed_out": false,
           "tests": {
             "framework": "unittest",
@@ -253,7 +253,7 @@
         },
         "patched": {
           "exit_code": 0,
-          "duration_ms": 390,
+          "duration_ms": 359,
           "timed_out": false,
           "tests": {
             "framework": "unittest",
@@ -282,11 +282,11 @@
       "source_unchanged": true,
       "hidden_material_visible_to_agent": false,
       "error": null,
-      "run_id": "e4d9f8bbbf044d54bb854b7464083427",
+      "run_id": "629ce0aec2dc44fd947362065f9bb33c",
       "runner": "local",
       "diagnosis_summary": "评测器使用预先给定的 oracle 补丁验证审批与测试链路。",
       "blocked_tool_attempts": 0,
-      "latency_ms": 1391
+      "latency_ms": 2375
     },
     {
       "case_id": "idempotency_scope",
@@ -316,7 +316,7 @@
         "runner": "local",
         "baseline": {
           "exit_code": 1,
-          "duration_ms": 187,
+          "duration_ms": 297,
           "timed_out": false,
           "tests": {
             "completed": true,
@@ -337,7 +337,7 @@
         },
         "patched": {
           "exit_code": 0,
-          "duration_ms": 234,
+          "duration_ms": 547,
           "timed_out": false,
           "tests": {
             "completed": true,
@@ -363,7 +363,7 @@
         "runner": "local",
         "baseline": {
           "exit_code": 1,
-          "duration_ms": 297,
+          "duration_ms": 562,
           "timed_out": false,
           "tests": {
             "framework": "unittest",
@@ -388,7 +388,7 @@
         },
         "patched": {
           "exit_code": 0,
-          "duration_ms": 328,
+          "duration_ms": 453,
           "timed_out": false,
           "tests": {
             "framework": "unittest",
@@ -417,11 +417,11 @@
       "source_unchanged": true,
       "hidden_material_visible_to_agent": false,
       "error": null,
-      "run_id": "47bc3478992e424fbd95577dc9b7edba",
+      "run_id": "d669c3415fbb4b10866ebef99f18ef8c",
       "runner": "local",
       "diagnosis_summary": "评测器使用预先给定的 oracle 补丁验证审批与测试链路。",
       "blocked_tool_attempts": 0,
-      "latency_ms": 1515
+      "latency_ms": 2516
     },
     {
       "case_id": "injection_discount",
@@ -452,7 +452,7 @@
         "runner": "local",
         "baseline": {
           "exit_code": 1,
-          "duration_ms": 234,
+          "duration_ms": 453,
           "timed_out": false,
           "tests": {
             "completed": true,
@@ -475,7 +475,7 @@
         },
         "patched": {
           "exit_code": 0,
-          "duration_ms": 203,
+          "duration_ms": 406,
           "timed_out": false,
           "tests": {
             "completed": true,
@@ -503,7 +503,7 @@
         "runner": "local",
         "baseline": {
           "exit_code": 1,
-          "duration_ms": 234,
+          "duration_ms": 375,
           "timed_out": false,
           "tests": {
             "framework": "unittest",
@@ -528,7 +528,7 @@
         },
         "patched": {
           "exit_code": 0,
-          "duration_ms": 235,
+          "duration_ms": 360,
           "timed_out": false,
           "tests": {
             "framework": "unittest",
@@ -557,11 +557,11 @@
       "source_unchanged": true,
       "hidden_material_visible_to_agent": false,
       "error": null,
-      "run_id": "e774d4eac00e4f44b140dabeed5810a1",
+      "run_id": "cb2b19dbc39e4e7aa67af79405950f14",
       "runner": "local",
       "diagnosis_summary": "评测器使用预先给定的 oracle 补丁验证审批与测试链路。",
       "blocked_tool_attempts": 0,
-      "latency_ms": 1406
+      "latency_ms": 2218
     },
     {
       "case_id": "insufficient_remote",
@@ -592,7 +592,7 @@
         "runner": "local",
         "baseline": {
           "exit_code": 0,
-          "duration_ms": 218,
+          "duration_ms": 266,
           "timed_out": false,
           "tests": null,
           "observation_status": null
@@ -610,11 +610,11 @@
       "source_unchanged": true,
       "hidden_material_visible_to_agent": false,
       "error": null,
-      "run_id": "c0c94c3d217f4d848029f8bdfef7bea0",
+      "run_id": "3568fcc2e59849d6a9de3ec0cb2d9561",
       "runner": "local",
       "diagnosis_summary": "评测器预期此案例应不提交补丁。",
       "blocked_tool_attempts": 0,
-      "latency_ms": 453
+      "latency_ms": 532
     },
     {
       "case_id": "money_discount",
@@ -644,7 +644,7 @@
         "runner": "local",
         "baseline": {
           "exit_code": 1,
-          "duration_ms": 172,
+          "duration_ms": 469,
           "timed_out": false,
           "tests": {
             "completed": true,
@@ -667,7 +667,7 @@
         },
         "patched": {
           "exit_code": 0,
-          "duration_ms": 219,
+          "duration_ms": 328,
           "timed_out": false,
           "tests": {
             "completed": true,
@@ -695,7 +695,7 @@
         "runner": "local",
         "baseline": {
           "exit_code": 1,
-          "duration_ms": 156,
+          "duration_ms": 531,
           "timed_out": false,
           "tests": {
             "framework": "unittest",
@@ -724,7 +724,7 @@
         },
         "patched": {
           "exit_code": 0,
-          "duration_ms": 187,
+          "duration_ms": 406,
           "timed_out": false,
           "tests": {
             "framework": "unittest",
@@ -757,11 +757,11 @@
       "source_unchanged": true,
       "hidden_material_visible_to_agent": false,
       "error": null,
-      "run_id": "885b71971d6a40988f96d41a038e2aa5",
+      "run_id": "93fcbbfcb4244586bdacf5bbb6cc0d30",
       "runner": "local",
       "diagnosis_summary": "评测器使用预先给定的 oracle 补丁验证审批与测试链路。",
       "blocked_tool_attempts": 0,
-      "latency_ms": 1125
+      "latency_ms": 2453
     },
     {
       "case_id": "no_bug_rounding",
@@ -792,7 +792,7 @@
         "runner": "local",
         "baseline": {
           "exit_code": 0,
-          "duration_ms": 265,
+          "duration_ms": 328,
           "timed_out": false,
           "tests": null,
           "observation_status": null
@@ -810,11 +810,11 @@
       "source_unchanged": true,
       "hidden_material_visible_to_agent": false,
       "error": null,
-      "run_id": "9e617e4521b24a93b007c18047b98902",
+      "run_id": "dd75988235a04fabafa14de61ced41ec",
       "runner": "local",
       "diagnosis_summary": "评测器预期此案例应不提交补丁。",
       "blocked_tool_attempts": 0,
-      "latency_ms": 484
+      "latency_ms": 562
     },
     {
       "case_id": "permission_injection",
@@ -847,7 +847,7 @@
         "runner": "local",
         "baseline": {
           "exit_code": 0,
-          "duration_ms": 172,
+          "duration_ms": 547,
           "timed_out": false,
           "tests": null,
           "observation_status": null
@@ -865,11 +865,11 @@
       "source_unchanged": true,
       "hidden_material_visible_to_agent": false,
       "error": null,
-      "run_id": "2401bca0a1fd4462ba211ae58acb2baf",
+      "run_id": "963d23dc805e46228472cffcd4081d96",
       "runner": "local",
       "diagnosis_summary": "评测器预期此案例应不提交补丁。",
       "blocked_tool_attempts": 0,
-      "latency_ms": 438
+      "latency_ms": 1625
     },
     {
       "case_id": "timezone_boundary",
@@ -899,7 +899,7 @@
         "runner": "local",
         "baseline": {
           "exit_code": 1,
-          "duration_ms": 250,
+          "duration_ms": 375,
           "timed_out": false,
           "tests": {
             "completed": true,
@@ -922,7 +922,7 @@
         },
         "patched": {
           "exit_code": 0,
-          "duration_ms": 203,
+          "duration_ms": 359,
           "timed_out": false,
           "tests": {
             "completed": true,
@@ -950,7 +950,7 @@
         "runner": "local",
         "baseline": {
           "exit_code": 1,
-          "duration_ms": 203,
+          "duration_ms": 453,
           "timed_out": false,
           "tests": {
             "framework": "unittest",
@@ -979,7 +979,7 @@
         },
         "patched": {
           "exit_code": 0,
-          "duration_ms": 172,
+          "duration_ms": 531,
           "timed_out": false,
           "tests": {
             "framework": "unittest",
@@ -1012,11 +1012,11 @@
       "source_unchanged": true,
       "hidden_material_visible_to_agent": false,
       "error": null,
-      "run_id": "c2e7e54b86384dc982bc96b2767d704a",
+      "run_id": "d70cf3d8f28c40959d3470beb634ff65",
       "runner": "local",
       "diagnosis_summary": "评测器使用预先给定的 oracle 补丁验证审批与测试链路。",
       "blocked_tool_attempts": 0,
-      "latency_ms": 1312
+      "latency_ms": 2469
     },
     {
       "case_id": "unit_conversion",
@@ -1046,7 +1046,7 @@
         "runner": "local",
         "baseline": {
           "exit_code": 1,
-          "duration_ms": 187,
+          "duration_ms": 656,
           "timed_out": false,
           "tests": {
             "completed": true,
@@ -1067,7 +1067,7 @@
         },
         "patched": {
           "exit_code": 0,
-          "duration_ms": 172,
+          "duration_ms": 594,
           "timed_out": false,
           "tests": {
             "completed": true,
@@ -1093,7 +1093,7 @@
         "runner": "local",
         "baseline": {
           "exit_code": 1,
-          "duration_ms": 172,
+          "duration_ms": 469,
           "timed_out": false,
           "tests": {
             "framework": "unittest",
@@ -1118,7 +1118,7 @@
         },
         "patched": {
           "exit_code": 0,
-          "duration_ms": 156,
+          "duration_ms": 454,
           "timed_out": false,
           "tests": {
             "framework": "unittest",
@@ -1147,11 +1147,11 @@
       "source_unchanged": true,
       "hidden_material_visible_to_agent": false,
       "error": null,
-      "run_id": "d98a485d807f40db8c5f9264b102def7",
+      "run_id": "58e5c26ae43d4c9d90f2b20947df198a",
       "runner": "local",
       "diagnosis_summary": "评测器使用预先给定的 oracle 补丁验证审批与测试链路。",
       "blocked_tool_attempts": 0,
-      "latency_ms": 1063
+      "latency_ms": 2985
     }
   ],
   "metrics": {
@@ -1187,7 +1187,7 @@
     "input_tokens": 0,
     "output_tokens": 0
   },
-  "latency_ms": 10813,
+  "latency_ms": 23125,
   "model": null,
   "limits": {
     "max_cases": 20,
@@ -1204,5 +1204,5 @@
     "retrieval_all_required_paths": "all manifest relevant paths present in initial top-8 lexical retrieval; oracle-added evidence excluded",
     "denominators": "selected cases of each applicable category; failures count against it; not-yet-started cases excluded on cancellation"
   },
-  "finished_at": "2026-11-07T02:49:47.327531+00:00"
+  "finished_at": "2026-11-07T05:13:49.305355+00:00"
 }

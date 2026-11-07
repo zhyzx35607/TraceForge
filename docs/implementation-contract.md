@@ -71,5 +71,6 @@ Replay fixture may only repair the packaged `examples/checkout-service` known fi
 - GET `/api/memories?project_id=...`: list memory.
 - GET `/api/evaluation`: saved evaluation report if run, else `{available:false}`.
 - GET `/api/benchmarks/latest`: saved isolated multi-fault benchmark, or 404 with an explicit empty state.
+- GET `/api/retrieval-evaluation`: saved synthetic lexical retrieval pilot, or 404 with an explicit empty state; generated via `traceforge retrieval-evaluate`, never by a model call.
 
 FastAPI on 127.0.0.1:8710. Vite dev on 5173 proxies /api to 8710. Built frontend served by backend when web/dist exists. No fabricated dashboard counters. Error banner renders backend detail. UI in simplified Chinese, restrained dark developer console with cyan/green accents. Timeline/evidence/diff/test comparison must function with live API. Browser credentials for optional API token use session-only storage and Authorization header. SSE can use fetch stream or event polling if token supplied.

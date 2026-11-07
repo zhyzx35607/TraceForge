@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import argparse
+import configparser
 import difflib
 import hashlib
 import json
 import os
 import re
+import shlex
 import shutil
 import signal
 import stat
@@ -13,6 +16,7 @@ import sys
 import tempfile
 import threading
 import time
+import tomllib
 import uuid
 from collections import Counter
 from collections.abc import Callable
@@ -222,7 +226,7 @@ def _docker_command(project: dict, snapshot: Path, settings, name: str, *,
             *project['test_command']]
 
 
-def observed_command(command: list[str], observer: str, report: str, *, docker: bool = False) -> tuple[list[str], str | None]:
+def _test_invocation(command: list[str], *, docker: bool = False) -> tuple[str | None, str, list[str]]:
     executable = Path(command[0]).name.casefold()
     python_name = bool(re.fullmatch(r'(?:python|python3|python3\.\d+|pypy3?)(?:\.exe)?', executable))
     if python_name and len(command) >= 3 and command[1] == '-m' and command[2] in {'unittest', 'pytest'}:
@@ -237,8 +241,237 @@ def observed_command(command: list[str], observer: str, report: str, *, docker: 
         else:
             interpreter = sys.executable
     else:
+        return None, command[0], command[1:]
+    return framework, interpreter, arguments
+
+
+class _CommandParser(argparse.ArgumentParser):
+    def __init__(self):
+        super().__init__(add_help=False, allow_abbrev=False)
+
+    def error(self, message):
+        raise VerificationError(f'不支持的测试参数：{message}；请使用快照内的相对测试路径和受支持参数')
+
+
+def _snapshot_path(raw: str, root: Path, manifest: dict[str, str], *, directory: bool = False,
+                   exists: bool = True, absolute: bool = True, base: Path | None = None) -> str:
+    """Translate source-root paths into the same relative path in either snapshot."""
+    windows = PureWindowsPath(raw)
+    if (not raw or '\x00' in raw or raw.startswith('~') or '$' in raw
+            or (windows.drive and not windows.is_absolute())
+            or (os.name != 'nt' and windows.drive)):
+        raise VerificationError(f'不支持的测试路径：{raw}；请使用仓库内相对路径')
+    path = Path(raw.replace('\\', '/'))
+    if not absolute and (path.is_absolute() or windows.is_absolute()):
+        raise VerificationError(f'pytest 配置必须使用快照相对路径：{raw}')
+    try:
+        relative = ((base or root) / path).resolve().relative_to(root).as_posix()
+    except (ValueError, OSError) as exc:
+        raise VerificationError(f'测试路径越出仓库快照：{raw}') from exc
+    key = os.path.normcase(relative)
+    files = {os.path.normcase(name): name for name in manifest}
+    has_children = relative == '.' or any(name.startswith(key + os.sep) for name in files)
+    # normcase changes '/' to '\\' only on Windows; use its separator consistently.
+    if exists and ((directory and not has_children) or (not directory and key not in files and not has_children)):
+        raise VerificationError(f'测试路径不在获批快照中：{raw}')
+    relative = files.get(key, relative)
+    # A mapped absolute filename must not become an option or pytest response file.
+    return './' + relative if relative.startswith(('-', '@')) else relative
+
+
+def _unittest_arguments(arguments: list[str], root: Path, manifest: dict[str, str]) -> list[str]:
+    discovery = bool(arguments and arguments[0].casefold() == 'discover')
+    parser = _CommandParser()
+    for short, long in [('-v', '--verbose'), ('-q', '--quiet'), ('-f', '--failfast'),
+                        ('-c', '--catch'), ('-b', '--buffer')]:
+        parser.add_argument(short, long, action='store_true')
+    parser.add_argument('--locals', action='store_true')
+    parser.add_argument('-k', action='append', default=[])
+    parser.add_argument('--durations', type=int)
+    if discovery:
+        parser.add_argument('-s', '--start-directory')
+        parser.add_argument('-t', '--top-level-directory')
+        parser.add_argument('-p', '--pattern')
+    parser.add_argument('targets', nargs='*')
+    parsed = parser.parse_intermixed_args(arguments[1:] if discovery else arguments)
+    options = [flag for name, flag in [('verbose', '-v'), ('quiet', '-q'), ('failfast', '-f'),
+                                     ('catch', '-c'), ('buffer', '-b'), ('locals', '--locals')]
+               if getattr(parsed, name)]
+    for expression in parsed.k:
+        options.extend(['-k', expression])
+    if parsed.durations is not None:
+        options.extend(['--durations', str(parsed.durations)])
+    if discovery or not parsed.targets:
+        if len(parsed.targets) > 3:
+            raise VerificationError('unittest discover 最多接受 start、pattern、top 三个位置参数')
+        targets = parsed.targets + [None] * (3 - len(parsed.targets))
+        start = getattr(parsed, 'start_directory', None) or targets[0] or '.'
+        pattern = getattr(parsed, 'pattern', None) or targets[1] or 'test*.py'
+        top = getattr(parsed, 'top_level_directory', None) or targets[2]
+        if '/' in pattern or '\\' in pattern:
+            raise VerificationError('unittest discover pattern 必须为文件名模式，不得包含目录')
+        # Dotted discovery package names must resolve to a package in the snapshot.
+        package = start.replace('.', '/')
+        if (not (root / start).is_dir() and '/' not in start and '\\' not in start
+                and package + '/__init__.py' in manifest):
+            start = package
+            top = top or '.'
+        result = ['discover', *options, '-s', _snapshot_path(start, root, manifest, directory=True), '-p', pattern]
+        if top is not None:
+            result.extend(['-t', _snapshot_path(top, root, manifest, directory=True)])
+        return result
+    targets = []
+    for target in parsed.targets:
+        if target.endswith('.py') or '/' in target or '\\' in target:
+            normalized = _snapshot_path(target, root, manifest)
+            if normalized not in manifest or not normalized.endswith('.py'):
+                raise VerificationError('unittest 测试目标必须为快照内 Python 文件或模块名')
+            targets.append(normalized)
+            continue
+        parts = target.split('.')
+        if any(not part.isidentifier() for part in parts):
+            raise VerificationError(f'不支持的 unittest 模块目标：{target}')
+        matches = ['/'.join(parts[:index]) for index in range(1, len(parts) + 1)]
+        if not any(name + '.py' in manifest or name + '/__init__.py' in manifest for name in matches):
+            raise VerificationError(f'unittest 模块不在快照中：{target}；请使用仓库内相对测试路径')
+        targets.append(target)
+    return [*options, *targets]
+
+
+def _pytest_arguments(arguments: list[str], root: Path, manifest: dict[str, str], *,
+                      allow_config: bool = True, absolute: bool = True) -> tuple[list[str], str | None]:
+    parser = _CommandParser()
+    flags = ['-q', '--quiet', '-v', '--verbose', '-s', '-x', '--exitfirst', '--disable-warnings',
+             '--disable-pytest-warnings', '--strict-markers', '--strict-config', '--showlocals', '-l',
+             '--full-trace', '--setup-show', '--setup-only', '--collect-only', '--co',
+             '--no-header', '--no-summary']
+    for flag in flags:
+        parser.add_argument(flag, action='append_const', const=flag, dest='flags')
+    value_flags = ['-k', '-m', '--maxfail', '--tb', '--color', '--durations', '--durations-min',
+                   '--capture', '--show-capture', '-r', '--verbosity', '--assert']
+    for index, flag in enumerate(value_flags):
+        parser.add_argument(flag, action='append', dest=f'value_{index}')
+    if allow_config:
+        parser.add_argument('-c', '--config-file')
+    parser.add_argument('targets', nargs='*')
+    parsed = parser.parse_intermixed_args(arguments)
+    result = parsed.flags or []
+    for index, flag in enumerate(value_flags):
+        for value in getattr(parsed, f'value_{index}') or []:
+            result.extend([flag, value])
+    for target in parsed.targets:
+        if target.startswith('@'):
+            raise VerificationError('pytest 不支持 @响应参数文件；请显式列出快照内测试路径')
+        path, *selectors = target.split('::')
+        mapped = _snapshot_path(path, root, manifest, absolute=absolute)
+        result.append('::'.join([mapped, *selectors]))
+    selected = getattr(parsed, 'config_file', None)
+    config = _snapshot_path(selected, root, manifest, absolute=absolute) if selected else None
+    if config is not None and config not in manifest:
+        raise VerificationError('pytest 配置必须为快照内文件')
+    return result, config
+
+
+def _pytest_config(root: Path, manifest: dict[str, str], selected: str | None, *,
+                   import_roots: list[str] | None = None) -> str | None:
+    candidates = [selected] if selected else ['pytest.toml', '.pytest.toml', 'pytest.ini', '.pytest.ini',
+                                             'pyproject.toml', 'tox.ini', 'setup.cfg']
+    for name in candidates:
+        if name not in manifest:
+            continue
+        path = root / name
+        try:
+            raw = path.read_bytes()
+            if hashlib.sha256(raw).hexdigest() != manifest[name]:
+                raise VerificationError('读取 pytest 配置时仓库已改变；请重新调查')
+            if path.suffix == '.toml':
+                document = tomllib.loads(raw.decode('utf-8'))
+                pytest_table = document.get('tool', {}).get('pytest', {})
+                native = {key: value for key, value in pytest_table.items() if key != 'ini_options'}
+                if native and pytest_table.get('ini_options'):
+                    raise VerificationError('pytest 配置不能混用 native TOML 与 ini_options')
+                tool_config = native or pytest_table.get('ini_options')
+                if path.name == 'pyproject.toml':
+                    config = tool_config
+                elif path.name in {'pytest.toml', '.pytest.toml'}:
+                    config = document.get('pytest', {})
+                else:
+                    if tool_config is not None and 'pytest' in document:
+                        raise VerificationError('pytest 配置不能混用 pytest 与 tool.pytest 表')
+                    config = tool_config if tool_config is not None else document.get('pytest', {})
+            elif path.suffix in {'.ini', '.cfg'}:
+                parser = configparser.ConfigParser(interpolation=None)
+                parser.read_string(raw.decode('utf-8'))
+                if parser.defaults():
+                    raise VerificationError('pytest 配置不支持 DEFAULT 继承，请在 pytest 节中显式配置')
+                section = 'tool:pytest' if path.suffix == '.cfg' else 'pytest'
+                if path.suffix == '.cfg' and parser.has_section('pytest'):
+                    raise VerificationError('setup.cfg 的 pytest 配置必须使用 [tool:pytest] 节')
+                config = dict(parser[section]) if parser.has_section(section) else None
+                if path.name in {'pytest.ini', '.pytest.ini'}:
+                    config = config or {}
+            else:
+                raise VerificationError('pytest 配置仅支持 .ini、.cfg 或 .toml')
+            if config is None and not selected:
+                continue
+            config = config or {}
+            if not isinstance(config, dict):
+                raise TypeError('pytest table must be a mapping')
+            for key in ('pythonpath', 'testpaths', 'cache_dir', 'log_file'):
+                value = config.get(key, [])
+                values = value if isinstance(value, list) else ([value] if key in {'cache_dir', 'log_file'}
+                                                               else shlex.split(value))
+                for item in values:
+                    if not isinstance(item, str):
+                        raise TypeError(f'{key} must contain strings')
+                    if item:
+                        # pytest resolves pythonpath against the config file's
+                        # directory. testpaths/log_file use cwd, and cache_dir
+                        # uses rootdir; both are the snapshot root here.
+                        mapped = _snapshot_path(item, root, manifest,
+                                                exists=key in {'pythonpath', 'testpaths'}, absolute=False,
+                                                base=path.parent if key == 'pythonpath' else root)
+                        if key == 'pythonpath' and import_roots is not None:
+                            import_roots.append(mapped)
+            addopts = config.get('addopts', [])
+            addopts = shlex.split(addopts) if isinstance(addopts, str) else addopts
+            if not isinstance(addopts, list) or any(not isinstance(item, str) for item in addopts):
+                raise ValueError('addopts must contain strings')
+            _pytest_arguments(addopts, root, manifest, allow_config=False, absolute=False)
+        except (ValueError, TypeError, AttributeError, configparser.Error) as exc:
+            if isinstance(exc, VerificationError):
+                raise
+            raise VerificationError(f'无法安全解析 pytest 配置 {name}：{exc}') from exc
+        return name
+    return None
+
+
+def snapshot_test_command(command: list[str], root: Path, manifest: dict[str, str], *,
+                          import_roots: list[str] | None = None) -> list[str]:
+    framework, _, arguments = _test_invocation(command)
+    if framework is None:
+        return command
+    prefix = command[:3] if command[1:3] in (['-m', 'unittest'], ['-m', 'pytest']) else command[:1]
+    if framework == 'unittest':
+        return [*prefix, *_unittest_arguments(arguments, root, manifest)]
+    arguments, selected = _pytest_arguments(arguments, root, manifest)
+    config = _pytest_config(root, manifest, selected, import_roots=import_roots)
+    return [*prefix, *(['-c', config] if config else []), *arguments]
+
+
+def observed_command(command: list[str], observer: str, report: str, *, docker: bool = False) -> tuple[list[str], str | None]:
+    framework, interpreter, arguments = _test_invocation(command, docker=docker)
+    if framework is None:
         return command, None
-    return [interpreter, '-I', observer, framework, report, *arguments], framework
+    if framework == 'pytest':
+        # An explicit config blocks discovery in snapshot ancestors. rootdir alone
+        # does not constrain either config discovery or Python imports.
+        if '-c' not in arguments:
+            config = str(PurePosixPath(observer).with_name('pytest.ini')) if docker else str(Path(observer).with_name('pytest.ini'))
+            arguments = ['-c', config, *arguments]
+        arguments = ['--rootdir=.', '--confcutdir=.', *arguments]
+    # -I ignores PYTHONDONTWRITEBYTECODE; -B is needed to avoid source .pyc writes.
+    return [interpreter, '-I', '-B', observer, framework, report, *arguments], framework
 
 
 def read_observation(report_path: Path, framework: str, result: dict) -> dict | None:
@@ -371,6 +604,8 @@ def run_verification(project: dict, patches: list[dict], settings, run_id: str, 
     expected = project.get('_expected_manifest')
     if expected is not None and manifest != expected:
         raise VerificationError('审批后仓库文件已改变；请创建新的调查并重新审批')
+    import_roots: list[str] = []
+    command = snapshot_test_command(command, root, manifest, import_roots=import_roots)
     if runner == 'docker':
         if shutil.which('docker') is None:
             raise VerificationError('Docker 不可用；请安装并启动 Docker，或为可信项目显式选择 local runner')
@@ -395,6 +630,12 @@ def run_verification(project: dict, patches: list[dict], settings, run_id: str, 
         reports_dir.mkdir()
         observer_path = observer_dir / 'observer.py'
         observer_path.write_bytes(Path(__file__).with_name('test_observer.py').read_bytes())
+        (observer_dir / 'pytest.ini').write_text('[pytest]\n', encoding='utf-8')
+        (observer_dir / 'policy.json').write_text(json.dumps({'source_root': str(root),
+                                                           'files': sorted(manifest),
+                                                           'import_roots': import_roots,
+                                                           'patch_files': [item['path'] for item in patches]}),
+                                                encoding='utf-8')
         observer_path.chmod(stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
         if os.name != 'nt':
             observer_dir.chmod(0o755)

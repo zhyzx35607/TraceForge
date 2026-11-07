@@ -1,4 +1,4 @@
-param([int]$Port = 8710)
+﻿param([int]$Port = 8710)
 $ErrorActionPreference = 'Stop'
 $taskRoot = Split-Path -Parent $PSScriptRoot
 $runtime = Join-Path $taskRoot '.venv\Scripts\python.exe'

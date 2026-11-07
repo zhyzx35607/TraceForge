@@ -1,7 +1,7 @@
 export type View = 'runs' | 'projects' | 'memories' | 'evaluation' | 'compare'
 export type DetailTab = 'overview' | 'evidence' | 'patch' | 'verification' | 'events'
 export type Project = { id: string; name: string; root: string; test_command: string[]; runner: 'docker' | 'local'; trusted: boolean; github_repo?: string | null; created_at: string }
-export type Evidence = { id: string; source: string; path: string; line_start: number; line_end: number; content: string; score: number; kind: string; sha256: string }
+export type Evidence = { id: string; source: string; path: string; line_start: number; line_end: number; content: string; score: number; kind: string; sha256: string; partial_line?: boolean }
 export type Patch = { path: string; before: string; after: string; reason: string; evidence_ids: string[] }
 export type Diagnosis = { summary: string; root_cause: string; evidence_ids: string[]; confidence: string; limitations: string[]; patches: Patch[] }
 export type TestCounts = { framework: string; executed: number; passed: number; failed: number; skipped: number }

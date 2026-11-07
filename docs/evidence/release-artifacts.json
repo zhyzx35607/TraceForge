@@ -2,18 +2,32 @@
   "kind": "local-release-artifacts",
   "version": "0.1.0",
   "tested_payload_matches_final_wheel": true,
-  "matched_package_files": 98,
+  "matched_package_files": 99,
+  "runtime_metadata_matches_tested_install": true,
+  "source_distribution_files": 185,
+  "source_distribution_matches_checkout": true,
+  "extracted_source_checks_passed": true,
   "published": false,
   "artifacts": [
     {
       "name": "traceforge_agent-0.1.0-py3-none-any.whl",
-      "bytes": 226630,
-      "sha256": "472c57e887e95d1f7a42065fd248f78e89fb829aa9dbbcaaceaa7ace761af3c8"
+      "bytes": 248369,
+      "sha256": "163def562e35d5a9db7b37a4ad719cbf285912c6d8236b1331b13fee586aab8d"
     },
     {
       "name": "traceforge_agent-0.1.0.tar.gz",
-      "bytes": 672041,
-      "sha256": "c822ee9e54bfe800cf94902788a36ea44b7863125782d687fe8a682011879726"
+      "bytes": 806053,
+      "sha256": "7af1181d7d5f2bc7d1591956cb3ddc9718cbb7042b50e4c0ca327c7c27484053"
     }
-  ]
+  ],
+  "extracted_source_checks": {
+    "passed": 82,
+    "skipped": 0,
+    "duration_seconds": 11.55,
+    "suites": [
+      "test_reports.py",
+      "test_paths.py",
+      "test_retrieval_evaluation.py"
+    ]
+  }
 }
