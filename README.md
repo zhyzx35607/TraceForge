@@ -1,6 +1,12 @@
 # TraceForge
 
+[![CI](https://github.com/zhyzx35607/TraceForge/actions/workflows/ci.yml/badge.svg)](https://github.com/zhyzx35607/TraceForge/actions/workflows/ci.yml)
+![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)
+![React + TypeScript](https://img.shields.io/badge/Frontend-React%20%2B%20TypeScript-61DAFB?logo=react&logoColor=black)
+
 **把失败日志变成可检查的证据、可审批的补丁和实际执行的回归结果。**
+
+> **English Summary**: TraceForge is a local-first engineering incident & repair workbench for developers maintaining multiple repositories. Given a failure symptom or log, a bounded tool-calling agent searches source code (hybrid BM25 + char n-gram TF-IDF + RRF), reads exact line ranges, inspects Git/GitHub context, and proposes minimal citation-backed patches. Every patch requires **SHA-256 digest-bound human approval** and is verified in an **isolated snapshot** (network-disabled Docker by default, or explicitly trusted local runner) with an external test observer comparing baseline failures against post-patch regressions. Source repositories remain strictly read-only.
 
 TraceForge 是面向维护多个代码仓库的开发者的本地 Agent 工作台。注册一个仓库，提交异常现象，Agent 可以检索源码、读取准确行号、参考 Git 与可选的 GitHub 信息，提出附带引用的最小修复。你审阅补丁后，验证器在独立副本中运行修复前后的测试，保存差异、退出码、测试数量和完整事件轨迹。
 
@@ -128,6 +134,16 @@ flowchart LR
     Verify --> Report[diff / 测试 / 记忆 / 对比]
     Report --> DB
 ```
+
+### 核心安全边界（Security Boundaries）
+
+| 控制层 | 强制机制 |
+| --- | --- |
+| 源仓库隔离 | 原仓库严格只读，仅在 `TRACEFORGE_ALLOWED_ROOTS` 白名单内索引；过滤 `.git`/凭据/二进制/符号链接 |
+| 引用与补丁门禁 | `finish` 仅允许引用本轮实际检索/读取的证据 ID 与行号；禁止修改测试、锁文件与敏感路径 |
+| 摘要绑定审批 | 人工审批绑定精确的补丁 SHA-256 摘要（`CAS` 状态机）；源码变动或过期摘要一律拒绝验证 |
+| 隔离回归验证 | 默认无网络只读根 Docker（`--network none --read-only --cap-drop ALL`）；`local` 仅限显式可信仓库；仓库外观察器核验真实测试前后变化 |
+| 持久租约与审计 | SQLite WAL 事务 + Worker 租约防脑裂 + 原子提交；每次状态流转与拒绝尝试均写入事件轨迹 |
 
 检索采用 BM25 + 字符 n-gram TF-IDF cosine + RRF，明确属于词法混合检索，不冒充神经向量。独立取证任务并行执行；核心模型当前是单 Agent，不为增加名词而堆模型角色。
 

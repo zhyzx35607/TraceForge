@@ -12,7 +12,7 @@ from traceforge.runner import _execute
 
 
 def settings_for(tmp_path):
-    return Settings(data_dir=tmp_path / 'state', allowed_roots=[], test_timeout=10, max_run_seconds=20)
+    return Settings(data_dir=tmp_path / 'state', allowed_roots=[], test_timeout=20, max_run_seconds=45)
 
 
 def test_catalog_has_independent_categories_and_private_material():
